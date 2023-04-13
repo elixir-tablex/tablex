@@ -1,7 +1,39 @@
 defmodule Tablex.Parser.Variable do
+  @moduledoc """
+  Parsisng variable name, type and/or description.
+
+  The source should be in the following format:
+
+      name (type, desc)
+
+  where name can be a quoted string or a string containing
+  no space.
+  """
+
+  @type t :: %__MODULE__{
+          name: atom(),
+          label: String.t(),
+          desc: String.t(),
+          type: :undefined | var_type()
+        }
+
+  @type var_type :: :integer | :float | :number | :string | :bool
+
+  @enforce_keys [:name]
+
+  defstruct [:name, :label, :desc, type: :undefined]
+
   import NimbleParsec
   import Tablex.Parser.Quoted
   import Tablex.Parser.Space
+
+  def variable do
+    concat(
+      name(),
+      optional(type())
+    )
+    |> reduce({:trans_var, []})
+  end
 
   def name do
     choice([
@@ -33,37 +65,37 @@ defmodule Tablex.Parser.Variable do
     |> concat(type_enum())
     |> concat(
       string(",")
+      |> ignore()
+      |> optional_space()
       |> utf8_string([not: ?)], min: 1)
       |> optional()
-      |> ignore()
     )
     |> ignore(string(")"))
   end
 
-  def variable do
-    concat(
-      name(),
-      optional(type())
-    )
-    |> reduce({:trans_var, []})
-  end
-
   @doc false
-  def trans_var([name]) do
-    trans_var([name, :undefined])
+  def trans_var([label]) do
+    trans_var([label, :undefined])
   end
 
-  def trans_var([name, type]) do
-    {to_name(name), type}
+  def trans_var([label, type]) do
+    trans_var([label, type, nil])
+  end
+
+  def trans_var([label, type, desc]) do
+    %__MODULE__{
+      name: to_name(label),
+      label: label,
+      type: type,
+      desc: desc
+    }
   end
 
   defp to_name(name),
-    do: {
+    do:
       name
       |> String.replace(["-", " "], "_")
       |> Macro.underscore()
       |> String.replace(~r/_+/, "_")
-      |> String.to_atom(),
-      name
-    }
+      |> String.to_atom()
 end

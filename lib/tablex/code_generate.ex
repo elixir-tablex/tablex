@@ -93,8 +93,8 @@ defmodule Tablex.CodeGenerate do
   end
 
   def generate(%Table{hit_policy: :merge} = table) do
-    empty = for {var, _type} <- table.outputs, into: %{}, do: {var, :undefined}
-    inputs = for {var, _type} <- table.inputs, do: var
+    empty = for %{name: var} <- table.outputs, into: %{}, do: {var, :undefined}
+    inputs = for %{name: var} <- table.inputs, do: var
 
     """
     binding = {#{inputs |> Enum.join(", ")}}
@@ -151,7 +151,7 @@ defmodule Tablex.CodeGenerate do
   end
 
   defp input_vars(%{inputs: inputs}) do
-    for {var, _type} <- inputs, do: var
+    for %{name: var} <- inputs, do: var
   end
 
   defp rule_clauses(%{rules: rules, inputs: in_def, outputs: out_def}) do
@@ -214,15 +214,15 @@ defmodule Tablex.CodeGenerate do
 
   defp pattern_guard(:any, _), do: "_"
 
-  defp pattern_guard({comp, number}, {name, _}) when comp in ~w[< <= >= >]a do
+  defp pattern_guard({comp, number}, %{name: name}) when comp in ~w[< <= >= >]a do
     {name, "is_number(#{name}) and #{name} #{comp} #{number}"}
   end
 
-  defp pattern_guard(%Range{first: first, last: last}, {name, _}) do
+  defp pattern_guard(%Range{first: first, last: last}, %{name: name}) do
     {name, "#{name} in #{first}..#{last}"}
   end
 
-  defp pattern_guard(list, {name, _}) when is_list(list) do
+  defp pattern_guard(list, %{name: name}) when is_list(list) do
     {name, "#{name} in #{inspect(list)}"}
   end
 
@@ -232,7 +232,7 @@ defmodule Tablex.CodeGenerate do
 
   defp to_output(outputs, out_def) do
     Stream.zip(out_def, outputs)
-    |> Stream.map(fn {{name, _}, value} -> {name, value} end)
+    |> Stream.map(fn {%{name: name}, value} -> {name, value} end)
     |> Map.new()
     |> inspect()
   end

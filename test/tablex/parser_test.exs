@@ -10,8 +10,11 @@ defmodule Tablex.ParserTest do
 
     assert %Table{
              hit_policy: :first_hit,
-             inputs: [day: :string, weather: :string],
-             outputs: [activity: :undefined],
+             inputs: [
+               %{name: :day, type: :string},
+               %{name: :weather, type: :string}
+             ],
+             outputs: [%{name: :activity, type: :undefined}],
              rules: [
                [1, input: [["Monday", "Tuesday"], "sunny"], output: ["walk"]]
              ]
@@ -28,8 +31,11 @@ defmodule Tablex.ParserTest do
 
       assert %Table{
                hit_policy: :first_hit,
-               inputs: [day: :string, weather: :string],
-               outputs: [activity: :undefined],
+               inputs: [
+                 %{name: :day, type: :string},
+                 %{name: :weather, type: :string}
+               ],
+               outputs: [%{name: :activity, type: :undefined}],
                rules: [
                  [1, input: [["Monday", "Tuesday"], "sunny"], output: ["walk"]],
                  [2, input: [["Monday", "Tuesday"], "rainy"], output: ["read"]]
@@ -48,7 +54,7 @@ defmodule Tablex.ParserTest do
       assert %Table{
                hit_policy: :collect,
                inputs: [],
-               outputs: [{:name, :undefined}],
+               outputs: [%{name: :name, type: :undefined}],
                rules: [
                  [1, input: [], output: ["Alex"]]
                ]

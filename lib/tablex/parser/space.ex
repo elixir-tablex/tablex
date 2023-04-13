@@ -1,4 +1,7 @@
 defmodule Tablex.Parser.Space do
+  @moduledoc """
+  Helper parser for parsing space, newline or end of word.
+  """
   import NimbleParsec
 
   def space(combinitor \\ empty()) do

@@ -1,4 +1,7 @@
 defmodule Tablex.Table do
+  @moduledoc """
+  Struct definition for tables.
+  """
   @type t() :: %__MODULE__{
           hit_policy: hit_policy(),
           inputs: [input()],

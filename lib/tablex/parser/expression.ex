@@ -1,4 +1,8 @@
 defmodule Tablex.Parser.Expression do
+  @moduledoc """
+  Expression parser.
+  """
+
   import NimbleParsec
   import Tablex.Parser.Quoted
   import Tablex.Parser.Space

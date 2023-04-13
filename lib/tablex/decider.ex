@@ -48,7 +48,7 @@ defmodule Tablex.Decider do
   end
 
   defp context(inputs, args) do
-    for {name, _type} <- inputs, into: %{} do
+    for %{name: name} <- inputs, into: %{} do
       {name, Keyword.get(args, name)}
     end
   end
@@ -63,13 +63,13 @@ defmodule Tablex.Decider do
   end
 
   defp condition(input_values, defs) do
-    for {v, {var, _type}} <- Enum.zip(input_values, defs), into: %{} do
+    for {v, %{name: var}} <- Enum.zip(input_values, defs), into: %{} do
       {var, v}
     end
   end
 
   defp output(output_values, defs) do
-    for {v, {var, _type}} <- Enum.zip(output_values, defs), into: %{} do
+    for {v, %{name: var}} <- Enum.zip(output_values, defs), into: %{} do
       {var, v}
     end
   end
@@ -104,7 +104,7 @@ defmodule Tablex.Decider do
   end
 
   defp merge(context, %Table{outputs: outputs} = table) do
-    empty = for {var, _type} <- outputs, into: %{}, do: {var, :undefined}
+    empty = for %{name: var} <- outputs, into: %{}, do: {var, :undefined}
 
     table
     |> rules()
@@ -114,27 +114,29 @@ defmodule Tablex.Decider do
     |> Stream.map(fn {_condition, outputs} ->
       outputs
     end)
-    |> Enum.reduce_while(empty, fn output, acc ->
-      acc =
-        Enum.reduce(output, acc, fn
-          {_, :any}, acc ->
-            acc
+    |> Enum.reduce_while(empty, &merge_if_containing_undf/2)
+  end
 
-          {k, v}, acc ->
-            case Map.get(acc, k) do
-              :undefined ->
-                Map.put(acc, k, v)
+  defp merge_if_containing_undf(output, acc) do
+    acc =
+      Enum.reduce(output, acc, fn
+        {_, :any}, acc ->
+          acc
 
-              _ ->
-                acc
-            end
-        end)
+        {k, v}, acc ->
+          case Map.get(acc, k) do
+            :undefined ->
+              Map.put(acc, k, v)
 
-      all_hit =
-        acc |> Map.values() |> Enum.all?(&(&1 != :undefined))
+            _ ->
+              acc
+          end
+      end)
 
-      if all_hit, do: {:halt, acc}, else: {:cont, acc}
-    end)
+    all_hit =
+      acc |> Map.values() |> Enum.all?(&(&1 != :undefined))
+
+    if all_hit, do: {:halt, acc}, else: {:cont, acc}
   end
 
   defp reverse_merge(context, %Table{} = table) do
