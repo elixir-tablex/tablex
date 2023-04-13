@@ -8,7 +8,7 @@ make maitaining domain rules easy.
 Let's assume we decide what to do everyday based on day of week and the weather,
 as the following table indicates:
 
-<table class="tablex horizontal"><colgroup> <col span="1" class="rule-number"> <col span="2" class="input"> <col span="1" class="output"> </colgroup> <thead><tr><th class="hit-policy hit-policy-F"></th><th class="input">Day (string)</th><th class="input">Weather (string)</th><th class="output">Activity</th></tr></thead><tbody><tr><td class="rule-number">1</td><td rowspan="3" class="input">Monday, Tuesday, Wednesday, Thursday</td><td class="input">rainy</td><td class="output">read</td></tr><tr><td class="rule-number">2</td><td class="input">snowy</td><td class="output">build snowman</td></tr><tr><td class="rule-number">3</td><td class="input">-</td><td class="output">read, walk</td></tr><tr><td class="rule-number">4</td><td rowspan="2" class="input">Friday</td><td class="input">sunny</td><td class="output">soccer</td></tr><tr><td class="rule-number">5</td><td class="input">-</td><td class="output">swim</td></tr><tr><td class="rule-number">6</td><td class="input">Saturday</td><td class="input">-</td><td class="output">watch movie, games</td></tr><tr><td class="rule-number">7</td><td class="input">Sunday</td><td class="input">-</td><td class="output">null</td></tr></tbody></table>
+<table class="tablex horizontal"><colgroup> <col span="1" class="rule-number"> <col span="2" class="input"> <col span="1" class="output"> </colgroup> <thead><tr><th class="hit-policy hit-policy-F"></th><th class="input">Day (string)</th><th class="input">Weather (string)</th><th class="output">Activity</th></tr></thead><tbody><tr><td class="rule-number">1</td><td rowspan="2" class="input">Monday, Tuesday, Wednesday, Thursday</td><td class="input">rainy</td><td class="output">read</td></tr><tr><td class="rule-number">2</td><td class="input">-</td><td class="output">read, walk</td></tr><tr><td class="rule-number">3</td><td rowspan="2" class="input">Friday</td><td class="input">sunny</td><td class="output">soccer</td></tr><tr><td class="rule-number">4</td><td class="input">-</td><td class="output">swim</td></tr><tr><td class="rule-number">5</td><td class="input">Saturday</td><td class="input">-</td><td class="output">watch movie, games</td></tr><tr><td class="rule-number">6</td><td class="input">Sunday</td><td class="input">-</td><td class="output">null</td></tr></tbody></table>
 
 We can use a similar tabular form of the code in an Elixir program:
 
@@ -311,6 +311,8 @@ end
 * [ ] support Date data type
 * [ ] support Time data type
 * [ ] support DateTime data type
+* [ ] vertical tables
+* [ ] rule code format
 
 ## Installation
 
