@@ -14,14 +14,15 @@ defmodule Tablex.Parser.Variable do
           name: atom(),
           label: String.t(),
           desc: String.t(),
-          type: :undefined | var_type()
+          type: :undefined | var_type(),
+          path: [atom()]
         }
 
   @type var_type :: :integer | :float | :number | :string | :bool
 
   @enforce_keys [:name]
 
-  defstruct [:name, :label, :desc, type: :undefined]
+  defstruct [:name, :label, :desc, type: :undefined, path: []]
 
   import NimbleParsec
   import Tablex.Parser.Quoted
@@ -29,7 +30,7 @@ defmodule Tablex.Parser.Variable do
 
   def variable do
     concat(
-      name(),
+      name() |> lookahead(eow()) |> reduce({:trans_name, []}),
       optional(type())
     )
     |> reduce({:trans_var, []})
@@ -37,11 +38,29 @@ defmodule Tablex.Parser.Variable do
 
   def name do
     choice([
-      ascii_char([?A..?z])
-      |> times(ascii_char([?0..?9, ?_, ?-, ?A..?z]), min: 0)
-      |> reduce({List, :to_string, []}),
+      varname(),
       quoted_string()
     ])
+  end
+
+  def varname do
+    ascii_varname()
+    |> times(
+      string(".")
+      |> concat(ascii_varname()),
+      min: 0
+    )
+  end
+
+  def ascii_varname do
+    ascii_char([?A..?z])
+    |> times(ascii_char([?0..?9, ?_, ?-, ?A..?z]), min: 0)
+    |> reduce({List, :to_string, []})
+  end
+
+  @doc false
+  def trans_name(list) do
+    List.to_string(list)
   end
 
   def type_enum do
@@ -83,19 +102,31 @@ defmodule Tablex.Parser.Variable do
   end
 
   def trans_var([label, type, desc]) do
+    {name, path} = to_name_path(label)
+
     %__MODULE__{
-      name: to_name(label),
+      name: name,
       label: label,
       type: type,
-      desc: desc
+      desc: desc,
+      path: path
     }
   end
 
-  defp to_name(name),
-    do:
-      name
-      |> String.replace(["-", " "], "_")
-      |> Macro.underscore()
-      |> String.replace(~r/_+/, "_")
-      |> String.to_atom()
+  defp to_name_path(label) do
+    [name | path] =
+      label
+      |> String.split(".", trim: true)
+      |> Stream.map(fn t ->
+        t
+        |> String.trim()
+        |> String.replace(["-", " "], "_")
+        |> Macro.underscore()
+        |> String.replace(~r/_+/, "_")
+        |> String.to_atom()
+      end)
+      |> Enum.reverse()
+
+    {name, Enum.reverse(path)}
+  end
 end

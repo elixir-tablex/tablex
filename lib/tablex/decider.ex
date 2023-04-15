@@ -43,14 +43,20 @@ defmodule Tablex.Decider do
     reverse_merge(context, table)
   end
 
-  def decide(_, _, _) do
+  def decide(%Table{}, _, _) do
     {:error, :hit_policy_not_implemented}
   end
 
+  def decide({:error, _} = err, _, _) do
+    err
+  end
+
   defp context(inputs, args) do
-    for %{name: name} <- inputs, into: %{} do
-      {name, Keyword.get(args, name)}
+    for %{name: name, path: path} <- inputs, into: %{} do
+      path = path ++ [name]
+      {path, get_in(args, path)}
     end
+    |> flatten_path()
   end
 
   defp rules(%Table{rules: rules, inputs: inputs, outputs: outputs}) do
@@ -63,14 +69,14 @@ defmodule Tablex.Decider do
   end
 
   defp condition(input_values, defs) do
-    for {v, %{name: var}} <- Enum.zip(input_values, defs), into: %{} do
-      {var, v}
+    for {v, %{name: var, path: path}} <- Enum.zip(input_values, defs), into: %{} do
+      {path ++ [var], v}
     end
   end
 
   defp output(output_values, defs) do
-    for {v, %{name: var}} <- Enum.zip(output_values, defs), into: %{} do
-      {var, v}
+    for {v, %{name: var, path: path}} <- Enum.zip(output_values, defs), into: %{} do
+      {path ++ [var], v}
     end
   end
 
@@ -84,7 +90,7 @@ defmodule Tablex.Decider do
 
     case hit do
       {_condition, output} ->
-        output
+        flatten_path(output)
 
       nil ->
         nil
@@ -98,13 +104,13 @@ defmodule Tablex.Decider do
       match_rule?(condition, context)
     end)
     |> Stream.map(fn {_condition, outputs} ->
-      outputs
+      flatten_path(outputs)
     end)
     |> Enum.to_list()
   end
 
   defp merge(context, %Table{outputs: outputs} = table) do
-    empty = for %{name: var} <- outputs, into: %{}, do: {var, :undefined}
+    empty = for %{name: var, path: path} <- outputs, into: %{}, do: {path ++ [var], :undefined}
 
     table
     |> rules()
@@ -115,6 +121,7 @@ defmodule Tablex.Decider do
       outputs
     end)
     |> Enum.reduce_while(empty, &merge_if_containing_undf/2)
+    |> flatten_path()
   end
 
   defp merge_if_containing_undf(output, acc) do
@@ -152,7 +159,7 @@ defmodule Tablex.Decider do
 
   def match_rule?(condition, context) do
     Enum.all?(condition, fn {key, expect} ->
-      match_expect?(expect, Map.get(context, key))
+      match_expect?(expect, get_in(context, key))
     end)
   end
 
@@ -173,4 +180,19 @@ defmodule Tablex.Decider do
   def match_expect?(:any, _), do: true
   def match_expect?(expect, expect), do: true
   def match_expect?(_, _), do: false
+
+  defp flatten_path(outputs) do
+    Enum.reduce(outputs, %{}, fn {path, v}, acc ->
+      acc |> put_recursively(path, v)
+    end)
+  end
+
+  defp put_recursively(%{} = acc, [path], value) do
+    Map.put(acc, path, value)
+  end
+
+  defp put_recursively(%{} = acc, [head | rest], value) do
+    v = put_recursively(%{}, rest, value)
+    Map.update(acc, head, v, &Map.merge(&1, v))
+  end
 end

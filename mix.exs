@@ -31,7 +31,7 @@ defmodule Tablex.MixProject do
   defp docs do
     [
       main: "readme",
-      extras: ~w[README.md],
+      extras: ~w[README.md guides/nested_fields.md],
       before_closing_head_tag: &before_closing_head_tag/1,
       source_url: "https://github.com/qhwa/tablex"
     ]
