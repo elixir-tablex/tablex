@@ -41,6 +41,24 @@ defmodule Tablex.Parser.VariableTest do
            } = parse(~S["Test  var test" (string, describing the test)])
   end
 
+  describe "With nested variables" do
+    test "it works with nested variables" do
+      assert %{
+               name: :b,
+               path: [:a],
+               label: "a/b"
+             } = parse("a/b")
+    end
+
+    test "it works at two levels deep" do
+      assert %{
+               name: :c,
+               path: [:a, :b],
+               label: "a/b/c"
+             } = parse("a/b/c")
+    end
+  end
+
   defp parse(text) do
     assert {:ok, [var], _, _, _, _} = VariableParser.parse(text)
     var

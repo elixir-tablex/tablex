@@ -151,7 +151,13 @@ defmodule Tablex.CodeGenerate do
   end
 
   defp input_vars(%{inputs: inputs}) do
-    for %{name: var} <- inputs, do: var
+    Enum.map(inputs, fn
+      %{name: var, path: []} ->
+        var
+
+      %{path: [root | _]} ->
+        root
+    end)
   end
 
   defp rule_clauses(%{rules: rules, inputs: in_def, outputs: out_def}) do
@@ -214,20 +220,33 @@ defmodule Tablex.CodeGenerate do
 
   defp pattern_guard(:any, _), do: "_"
 
-  defp pattern_guard({comp, number}, %{name: name}) when comp in ~w[< <= >= >]a do
-    {name, "is_number(#{name}) and #{name} #{comp} #{number}"}
+  defp pattern_guard({comp, number}, %{name: name, path: path}) when comp in ~w[< <= >= >]a do
+    var_name = Enum.join(path ++ [name], "_")
+
+    {on_path(var_name, tl(path ++ [name])),
+     "is_number(#{var_name}) and #{var_name} #{comp} #{number}"}
   end
 
-  defp pattern_guard(%Range{first: first, last: last}, %{name: name}) do
-    {name, "#{name} in #{first}..#{last}"}
+  defp pattern_guard(%Range{first: first, last: last}, %{name: name, path: path}) do
+    var_name = Enum.join(path ++ [name], "_")
+
+    {on_path(var_name, tl(path ++ [name])), "#{var_name} in #{first}..#{last}"}
   end
 
-  defp pattern_guard(list, %{name: name}) when is_list(list) do
-    {name, "#{name} in #{inspect(list)}"}
+  defp pattern_guard(list, %{name: name, path: path}) when is_list(list) do
+    var_name = Enum.join(path ++ [name], "_")
+
+    {on_path(var_name, tl(path ++ [name])), "#{var_name} in #{inspect(list)}"}
   end
 
   defp pattern_guard(literal, _) when is_literal(literal) do
     inspect(literal)
+  end
+
+  defp on_path(name, []), do: name
+
+  defp on_path(name, [head | tail]) do
+    "%{#{head}: #{on_path(name, tail)}}"
   end
 
   defp to_output(outputs, out_def) do
