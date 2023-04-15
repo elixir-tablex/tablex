@@ -302,8 +302,8 @@ end
 
 ## TODOs
 
-* [ ] nested input, e.g. `country.name` as an input stub name
-* [ ] nested output, e.g. `constraints.max_distance` as an output stub name
+* [x] nested input, e.g. `country.name` as an input stub name
+* [x] nested output, e.g. `constraints.max_distance` as an output stub name
 * [ ] support referring to other input entries in an input entry
 * [ ] support functions in output entries
 * [ ] support input validation

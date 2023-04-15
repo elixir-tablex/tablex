@@ -39,11 +39,12 @@ Following is an example of using nested output stubs in a table.
 
 ``` elixir
 iex> table = Tablex.new("""
-...>   M "Car Size" "Rental Duration" (number, in days) "Miles Driven" (number, per day) || price.base (number, $/day) price.extra_mileage_fee (number, $/mile) price.insurance_fee (number, $/day)
-...>   1 compact    <=3                                 <=100                            || 50                           0.25                                 15
-...>   2 mid_size   4..7                                101..200                         || 70                           0.30                                 -
-...>   3 full_size  >7                                  > 200                            || 90                           0.35                                 25
-...>   4 -          -                                   -                                || -                            -                                    20
+...>   M "Car Size" "Rental Duration"  "Miles Driven"    || price.base      price.extra_mileage_fee  price.insurance_fee
+...>     -          (number, in days)  (number, per day) || (number, $/day) (number, $/mile)         (number, $/day)
+...>   1 compact    <=3                <=100             || 50              0.25                     15
+...>   2 mid_size   4..7               101..200          || 70              0.30                     -
+...>   3 full_size  >7                 > 200             || 90              0.35                     25
+...>   4 -          -                  -                 || -               -                        20
 ...>   """)
 ...>
 ...> Tablex.decide(

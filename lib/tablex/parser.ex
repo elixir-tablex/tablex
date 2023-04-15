@@ -18,6 +18,7 @@ defmodule Tablex.Parser do
   import NimbleParsec
   import Tablex.Parser.Space
   import Tablex.Parser.Variable
+  import Tablex.Parser.InformativeRow
   import Tablex.Parser.Rule
 
   @hit_policies [
@@ -73,6 +74,7 @@ defmodule Tablex.Parser do
     |> concat(space())
     |> times(output_field, min: 1)
     |> newline()
+    |> concat(informative_row() |> newline() |> unwrap_and_tag(:info) |> optional())
     |> rules()
 
   defparsec(:table, table, debug: false)
