@@ -26,5 +26,27 @@ defmodule Tablex.Table do
       outputs: Keyword.get_values(parsed, :output),
       rules: parsed[:rules]
     }
+    |> apply_info_row(parsed[:info])
+  end
+
+  defp apply_info_row(table, nil) do
+    table
+  end
+
+  defp apply_info_row(table, [input_info, output_info]) do
+    apply_info = fn
+      {var, {type, desc}} ->
+        %{var | type: type, desc: desc}
+    end
+
+    inputs =
+      Stream.zip(table.inputs, input_info)
+      |> Enum.map(apply_info)
+
+    outputs =
+      Stream.zip(table.outputs, output_info)
+      |> Enum.map(apply_info)
+
+    %{table | inputs: inputs, outputs: outputs}
   end
 end

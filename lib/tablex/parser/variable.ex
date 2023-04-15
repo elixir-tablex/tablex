@@ -31,7 +31,7 @@ defmodule Tablex.Parser.Variable do
   def variable do
     concat(
       name() |> lookahead(eow()) |> reduce({:trans_name, []}),
-      optional(type())
+      optional(concat(optional_space(), type()))
     )
     |> reduce({:trans_var, []})
   end
@@ -78,7 +78,7 @@ defmodule Tablex.Parser.Variable do
   end
 
   def type do
-    string(" (")
+    string("(")
     |> ignore()
     |> concat(optional_space())
     |> concat(type_enum())

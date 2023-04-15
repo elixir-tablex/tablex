@@ -46,16 +46,16 @@ defmodule Tablex.Parser.VariableTest do
       assert %{
                name: :b,
                path: [:a],
-               label: "a/b"
-             } = parse("a/b")
+               label: "a.b"
+             } = parse("a.b")
     end
 
     test "it works at two levels deep" do
       assert %{
                name: :c,
                path: [:a, :b],
-               label: "a/b/c"
-             } = parse("a/b/c")
+               label: "a.b.c"
+             } = parse("a.b.c")
     end
   end
 
