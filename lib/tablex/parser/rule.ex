@@ -1,7 +1,5 @@
 defmodule Tablex.Parser.Rule do
-  @moduledoc """
-  Rule parser.
-  """
+  @moduledoc false
 
   import NimbleParsec
   import Tablex.Parser.Expression

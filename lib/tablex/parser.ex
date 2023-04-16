@@ -42,6 +42,7 @@ defmodule Tablex.Parser do
     |> map({__MODULE__, :to_policy, []})
     |> unwrap_and_tag(:hit_policy)
 
+  @doc false
   for {policy, text} <- @hit_policies do
     def to_policy(unquote(text)), do: unquote(policy)
   end
@@ -110,6 +111,7 @@ defmodule Tablex.Parser do
   @doc """
   Raising version of `parse/2`.
   """
+  @spec parse(String.t(), []) :: Table.t()
   def parse!(text, opts) do
     case parse(text, opts) do
       %Table{} = t ->

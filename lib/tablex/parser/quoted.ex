@@ -1,9 +1,7 @@
 defmodule Tablex.Parser.Quoted do
-  import NimbleParsec
+  @moduledoc false
 
-  @moduledoc """
-  This module parses quoted strings.
-  """
+  import NimbleParsec
 
   @doc """
   Parse a quoted string.

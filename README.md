@@ -269,7 +269,7 @@ iex> Tablex.decide(table, continent: "Europe", country: "France")
 %{feature1: true, feature2: true}
 ```
 
-## Generate Elixir Code
+## Generating Elixir Code
 
 It is feasible to generate Elixir code from a table with `Tablex.CodeGenerate.generate/1`, as:
 

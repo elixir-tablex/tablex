@@ -3,9 +3,18 @@
 The second row can be an informative row, to indicate the type and/or description of the variables.
 This is useful when the input and output are getting too long.
 
-## Examples
+For each stub, either an input or output, the format is the same, as:
 
 ```
+(type[, description])
+```
+
+where type shall be one of the supported variable types, and description can be string,
+or not specified (`-`).
+
+## Examples
+
+``` elixir
 iex> table = Tablex.new("""
 ...>   F Symptoms     "Test Results"                            "Medical History"                || Treatment Medication   Follow-up
 ...>     (string)     (string, either NORMAL or ABNORMAL)       (string)                         || (string)  (string)     (integer, in weeks)
@@ -28,7 +37,7 @@ Descriptions are optional.
 
 In case you want to skip some field(s), `"-"` can be used, as:
 
-```
+``` elixir
 iex> table = Tablex.new("""
 ...>   F "Customer Segment" "Purchase Frequency"  || "Campaign Type" Discount   "Email Frequency"
 ...>     -                  (integer, times/year) || -               -          -

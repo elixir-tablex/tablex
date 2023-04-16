@@ -1,28 +1,5 @@
 defmodule Tablex.Parser.Variable do
-  @moduledoc """
-  Parsisng variable name, type and/or description.
-
-  The source should be in the following format:
-
-      name (type, desc)
-
-  where name can be a quoted string or a string containing
-  no space.
-  """
-
-  @type t :: %__MODULE__{
-          name: atom(),
-          label: String.t(),
-          desc: String.t(),
-          type: :undefined | var_type(),
-          path: [atom()]
-        }
-
-  @type var_type :: :integer | :float | :number | :string | :bool
-
-  @enforce_keys [:name]
-
-  defstruct [:name, :label, :desc, type: :undefined, path: []]
+  @moduledoc false
 
   import NimbleParsec
   import Tablex.Parser.Quoted
@@ -104,7 +81,7 @@ defmodule Tablex.Parser.Variable do
   def trans_var([label, type, desc]) do
     {name, path} = to_name_path(label)
 
-    %__MODULE__{
+    %Tablex.Variable{
       name: name,
       label: label,
       type: type,

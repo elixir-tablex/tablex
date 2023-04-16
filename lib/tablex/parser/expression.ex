@@ -1,7 +1,5 @@
 defmodule Tablex.Parser.Expression do
-  @moduledoc """
-  Expression parser.
-  """
+  @moduledoc false
 
   import NimbleParsec
   import Tablex.Parser.Quoted

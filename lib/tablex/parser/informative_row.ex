@@ -1,4 +1,6 @@
 defmodule Tablex.Parser.InformativeRow do
+  @moduledoc false
+
   import NimbleParsec
   import Tablex.Parser.Space
   import Tablex.Parser.Variable
