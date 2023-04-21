@@ -24,7 +24,8 @@ defmodule Tablex.MixProject do
   defp deps do
     [
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
-      {:nimble_parsec, "~> 1.3"}
+      {:nimble_parsec, "~> 1.3"},
+      {:formular, "~> 0.3"}
     ]
   end
 
@@ -35,6 +36,7 @@ defmodule Tablex.MixProject do
         README.md
         guides/nested_fields.md
         guides/informative_row.md
+        guides/code_execution.md
         ],
       before_closing_head_tag: &before_closing_head_tag/1,
       source_url: "https://github.com/qhwa/tablex"

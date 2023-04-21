@@ -2,6 +2,7 @@ defmodule Tablex.Parser.Rule do
   @moduledoc false
 
   import NimbleParsec
+  import Tablex.Parser.Code
   import Tablex.Parser.Expression
   import Tablex.Parser.Space
 
@@ -37,12 +38,12 @@ defmodule Tablex.Parser.Rule do
     |> concat(seperator())
     |> space()
     |> concat(
-      expression()
+      output_expression()
       |> concat(
         times(
           concat(
             space(),
-            expression()
+            output_expression()
           ),
           min: 0
         )
@@ -61,6 +62,13 @@ defmodule Tablex.Parser.Rule do
 
   def seperator do
     string("||") |> replace(:||)
+  end
+
+  def output_expression do
+    choice([
+      code(),
+      expression()
+    ])
   end
 
   @doc false

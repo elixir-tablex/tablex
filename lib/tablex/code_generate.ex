@@ -220,7 +220,7 @@ defmodule Tablex.CodeGenerate do
 
   defp pattern_guard(:any, _), do: "_"
 
-  defp pattern_guard({comp, number}, %{name: name, path: path}) when comp in ~w[< <= >= >]a do
+  defp pattern_guard({comp, number}, %{name: name, path: path}) when comp in ~w[!= < <= >= >]a do
     var_name = Enum.join(path ++ [name], "_")
 
     {on_path(var_name, tl(path ++ [name])),
@@ -250,9 +250,17 @@ defmodule Tablex.CodeGenerate do
   end
 
   defp to_output(outputs, out_def) do
-    Stream.zip(out_def, outputs)
-    |> Stream.map(fn {%{name: name}, value} -> {name, value} end)
-    |> Map.new()
-    |> inspect()
+    parts =
+      Stream.zip(out_def, outputs)
+      |> Stream.map(fn
+        {%{name: name}, {:code, code}} ->
+          "#{name}: #{code}"
+
+        {%{name: name}, value} ->
+          "#{name}: #{inspect(value)}"
+      end)
+      |> Enum.join(", ")
+
+    ["%{", parts, "}"]
   end
 end
