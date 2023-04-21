@@ -62,5 +62,20 @@ defmodule Tablex.NestedTest do
       assert {%{hit: false}, _} = Code.eval_string(code, a: %{b: %{c: 10}})
       assert {%{hit: true}, _} = Code.eval_string(code, a: %{b: %{c: 9}})
     end
+
+    test "works with a real example" do
+      table =
+        Tablex.new("""
+        F quest.brand.id      || enabled
+          (integer, Brand Id) || (bool)
+        2 602                 || false
+        2 -                   || true
+        """)
+
+      code =
+        Tablex.CodeGenerate.generate(table)
+
+      assert {%{enabled: false}, _} = Code.eval_string(code, quest: %{brand: %{id: 602}})
+    end
   end
 end

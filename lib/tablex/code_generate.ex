@@ -239,8 +239,8 @@ defmodule Tablex.CodeGenerate do
     {on_path(var_name, tl(path ++ [name])), "#{var_name} in #{inspect(list)}"}
   end
 
-  defp pattern_guard(literal, _) when is_literal(literal) do
-    inspect(literal)
+  defp pattern_guard(literal, %{name: name, path: path}) when is_literal(literal) do
+    on_path(inspect(literal), tl(path ++ [name]))
   end
 
   defp on_path(name, []), do: name
