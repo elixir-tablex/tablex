@@ -139,6 +139,7 @@ defmodule Tablex.Parser.Expression do
 
   def comparation do
     choice([
+      string("!="),
       string(">="),
       string(">"),
       string("<="),

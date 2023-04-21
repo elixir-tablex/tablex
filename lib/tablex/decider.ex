@@ -19,22 +19,25 @@ defmodule Tablex.Decider do
   @spec decide(Table.t(), keyword(), options()) :: map() | {:error, :hit_policy_not_implemented}
   def decide(table, args, opts \\ [])
 
-  def decide(%Table{hit_policy: :first_hit} = table, args, _opts) do
+  def decide(%Table{hit_policy: :first_hit} = table, args, opts) do
     context = context(table.inputs, args)
 
     select(context, table)
+    |> maybe_exec_code(args, opts)
   end
 
-  def decide(%Table{hit_policy: :collect} = table, args, _opts) do
+  def decide(%Table{hit_policy: :collect} = table, args, opts) do
     context = context(table.inputs, args)
 
     collect(context, table)
+    |> Enum.map(&maybe_exec_code(&1, args, opts))
   end
 
-  def decide(%Table{hit_policy: :merge} = table, args, _opts) do
+  def decide(%Table{hit_policy: :merge} = table, args, opts) do
     context = context(table.inputs, args)
 
     merge(context, table)
+    |> maybe_exec_code(args, opts)
   end
 
   def decide(%Table{hit_policy: :reverse_merge} = table, args, _opts) do
@@ -84,13 +87,14 @@ defmodule Tablex.Decider do
     rules = rules(table)
 
     hit =
-      Enum.find(rules, fn {condition, _} ->
+      rules
+      |> Enum.find(fn {condition, _} ->
         match_rule?(condition, context)
       end)
 
     case hit do
       {_condition, output} ->
-        flatten_path(output)
+        output |> flatten_path()
 
       nil ->
         nil
@@ -172,6 +176,7 @@ defmodule Tablex.Decider do
     value >= first and value <= last
   end
 
+  def match_expect?({:!=, x}, value) when value != x, do: true
   def match_expect?({:>, x}, value) when is_number(value) and value > x, do: true
   def match_expect?({:>=, x}, value) when is_number(value) and value >= x, do: true
   def match_expect?({:<, x}, value) when is_number(value) and value < x, do: true
@@ -194,5 +199,16 @@ defmodule Tablex.Decider do
   defp put_recursively(%{} = acc, [head | rest], value) do
     v = put_recursively(%{}, rest, value)
     Map.update(acc, head, v, &Map.merge(&1, v))
+  end
+
+  defp maybe_exec_code(output, binding, opts) do
+    Map.new(output, fn
+      {k, {:code, "" <> code}} ->
+        {:ok, ret} = Formular.eval(code, binding, opts)
+        {k, ret}
+
+      {k, v} ->
+        {k, v}
+    end)
   end
 end
