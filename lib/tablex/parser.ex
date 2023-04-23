@@ -16,67 +16,14 @@ defmodule Tablex.Parser do
   require Logger
 
   import NimbleParsec
-  import Tablex.Parser.Space
-  import Tablex.Parser.Variable
-  import Tablex.Parser.InformativeRow
-  import Tablex.Parser.Rule
-
-  @hit_policies [
-    first_hit: "F",
-    collect: "C",
-    merge: "M",
-    reverse_merge: "R"
-  ]
-
-  collect_hit_policy =
-    string("C")
-    |> map({__MODULE__, :to_policy, []})
-    |> unwrap_and_tag(:hit_policy)
-
-  regular_hit_policy =
-    choice([
-      string("F"),
-      string("M"),
-      string("R")
-    ])
-    |> map({__MODULE__, :to_policy, []})
-    |> unwrap_and_tag(:hit_policy)
-
-  @doc false
-  for {policy, text} <- @hit_policies do
-    def to_policy(unquote(text)), do: unquote(policy)
-  end
-
-  input_field =
-    variable()
-    |> space()
-    |> unwrap_and_tag(:input)
-
-  io_sperator = string("||") |> ignore()
-
-  output_field =
-    variable()
-    |> optional_space()
-    |> unwrap_and_tag(:output)
+  import Tablex.Parser.HorizontalTable
+  import Tablex.Parser.VerticalTable
 
   table =
     choice([
-      collect_hit_policy
-      |> space()
-      |> times(input_field, min: 0)
-      |> label("`C` hit policy and optional input fields"),
-      regular_hit_policy
-      |> space()
-      |> times(input_field, min: 1)
-      |> label("input definitions")
+      h_table() |> tag(:horizontal),
+      v_table() |> tag(:vertical)
     ])
-    |> label("table header")
-    |> concat(io_sperator)
-    |> concat(space())
-    |> times(output_field, min: 1)
-    |> newline()
-    |> concat(informative_row() |> newline() |> unwrap_and_tag(:info) |> optional())
-    |> rules()
 
   defparsec(:table, table, debug: false)
 

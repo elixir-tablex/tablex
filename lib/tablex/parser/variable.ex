@@ -7,10 +7,10 @@ defmodule Tablex.Parser.Variable do
 
   def variable do
     concat(
-      name() |> lookahead(eow()) |> reduce({:trans_name, []}),
+      name() |> lookahead(eow()) |> reduce({__MODULE__, :trans_name, []}),
       optional(concat(optional_space(), type()))
     )
-    |> reduce({:trans_var, []})
+    |> reduce({__MODULE__, :trans_var, []})
   end
 
   def name do
