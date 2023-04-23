@@ -70,11 +70,23 @@ defmodule Tablex.MixProject do
         border-color: #DDD;
       }
 
-      table.tablex th {
+      table.tablex.horinzontal th {
         border-bottom: double;
+        font-weight: bold;
+      }
+
+      table.tablex th .stub-type {
+        display: block;
+        font-style: italic;
+        font-weight: normal;
+        color: var(--tablex-stub-type-color);
       }
 
       table.tablex td.input + td.output {
+        border-left: double;
+      }
+
+      table.tablex td.rule-number + td.output {
         border-left: double;
       }
 
@@ -87,8 +99,66 @@ defmodule Tablex.MixProject do
       }
 
       table.tablex td.rule-number {
+        color: var(--tablex-rule-number-color);
         border-right: double;
         text-align: center;
+      }
+
+      table.tablex.vertical tbody {
+        border-top: double;
+      }
+
+      table.tablex.vertical tfoot {
+        border-top: double;
+      }
+
+      table.tablex.vertical th.output {
+        border-right: double;
+      }
+
+      table.tablex.vertical th.input {
+        border-right: double;
+      }
+
+      table.tablex.vertical tfoot {
+        background-color: #EEE;
+      }
+
+      table.tablex.vertical td[colspan] {
+        text-align: center;
+      }
+
+      table.tablex.vertical tbody th {
+        text-align: left;
+      }
+
+      table.tablex.vertical tfoot th {
+        text-align: left;
+      }
+
+      .tbx-exp-true {
+        font-weight: bold;
+      }
+
+      .tbx-exp-false {
+        font-weight: normal;
+        font-style: italic;
+      }
+
+      .tbx-exp-number {
+        color: var(--tablex-exp-number-color);
+      }
+
+      .tbx-exp-string {
+        color: var(--tablex-exp-string-color);
+      }
+
+      .tbx-exp-any {
+        color: var(--tablex-exp-any-color);
+      }
+
+      .tbx-exp-list-sep {
+        color: var(--tablex-exp-list-sep-color);
       }
     </style>
     """

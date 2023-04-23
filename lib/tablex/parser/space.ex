@@ -18,11 +18,24 @@ defmodule Tablex.Parser.Space do
     |> concat(string("\n") |> ignore())
   end
 
-  def eow do
-    choice([
-      string(" "),
-      string("\n"),
-      eos()
-    ])
+  def eow(combinator \\ empty()) do
+    combinator
+    |> concat(
+      choice([
+        string(" "),
+        string("\n"),
+        eos()
+      ])
+    )
+  end
+
+  def eol(combinator \\ empty()) do
+    combinator
+    |> concat(
+      choice([
+        newline(),
+        eos()
+      ])
+    )
   end
 end

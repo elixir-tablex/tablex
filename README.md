@@ -44,6 +44,32 @@ Inside the table, we defined the decision logic with:
 4. Six rules which take inputs and determine the acitivity output. See [`Rules` section](#rules)
 5. A friendly expression in each cell of the rules. See [`Expression` section](#expression)
 
+## Vertical Table
+
+Vertical tables are the same as horinzontal ones. It's just a matter of direction.
+The following tables are the same:
+
+```
+F "Product Category" "Competitor Pricing"     "Product Features" || "Launch Decision" Reasoning
+1 Electronics        "Higher than Competitor" "More Features"    || Launch            "Competitive Advantage"
+2 Electronics        "Lower than Competitor"  "Same Features"    || Launch            "Price Advantage"
+3 Fashion            "Same as Competitor"     "New Features"     || "Do Not Launch"   "Lack of Differentiation"
+```
+
+<table class="tablex horizontal"><colgroup><col span="1" class="rule-number"><col span="3" class="input"><col span="2" class="output"></colgroup><thead><tr><th class="hit-policy hit-policy-F">F</th><th class="input">Product Category</th><th class="input">Competitor Pricing</th><th class="input">Product Features</th><th class="output">Launch Decision</th><th class="output">Reasoning</th></tr></thead><tbody><tr><td class="rule-number">1</td><td rowspan="2" class="input"><span class="tbx-exp-string">Electronics</span></td><td class="input"><span class="tbx-exp-string">Higher than Competitor</span></td><td class="input"><span class="tbx-exp-string">More Features</span></td><td class="output"><span class="tbx-exp-string">Launch</span></td><td class="output"><span class="tbx-exp-string">Competitive Advantage</span></td></tr><tr><td class="rule-number">2</td><td class="input"><span class="tbx-exp-string">Lower than Competitor</span></td><td class="input"><span class="tbx-exp-string">Same Features</span></td><td class="output"><span class="tbx-exp-string">Launch</span></td><td class="output"><span class="tbx-exp-string">Price Advantage</span></td></tr><tr><td class="rule-number">3</td><td class="input"><span class="tbx-exp-string">Fashion</span></td><td class="input"><span class="tbx-exp-string">Same as Competitor</span></td><td class="input"><span class="tbx-exp-string">New Features</span></td><td class="output"><span class="tbx-exp-string">Do Not Launch</span></td><td class="output"><span class="tbx-exp-string">Lack of Differentiation</span></td></tr></tbody></table>
+
+```
+====
+F                    || 1                        2                       3
+"Product Category"   || Electronics              Electronics             Fashion
+"Competitor Pricing" || "Higher than Competitor" "Lower than Competitor" "Same as Competitor"
+"Product Features"   || "More Features"          "Same Features"         "New Features"
+====
+"Launch Decision"    || Launch                   Launch                  "Do Not Launch"
+Reasoning            || "Competitive Advantage"  "Price Advantage"       "Lack of Differentiation"
+```
+
+<table class="tablex vertical"><tbody><tr><th class="hit-policy hit-policy-F">F</th><th class="rule-number">1</th><th class="rule-number">2</th><th class="rule-number">3</th></tr></tbody><tbody><tr><th class="input">Product Category</th><td colspan="2"><span class="tbx-exp-string">Electronics</span></td><td><span class="tbx-exp-string">Fashion</span></td></tr><tr><th class="input">Competitor Pricing</th><td><span class="tbx-exp-string">Higher than Competitor</span></td><td><span class="tbx-exp-string">Lower than Competitor</span></td><td><span class="tbx-exp-string">Same as Competitor</span></td></tr><tr><th class="input">Product Features</th><td><span class="tbx-exp-string">More Features</span></td><td><span class="tbx-exp-string">Same Features</span></td><td><span class="tbx-exp-string">New Features</span></td></tr></tbody><tfoot><tr><th class="output">Launch Decision</th><td><span class="tbx-exp-string">Launch</span></td><td><span class="tbx-exp-string">Launch</span></td><td><span class="tbx-exp-string">Do Not Launch</span></td></tr><tr><th class="output">Reasoning</th><td><span class="tbx-exp-string">Competitive Advantage</span></td><td><span class="tbx-exp-string">Price Advantage</span></td><td><span class="tbx-exp-string">Lack of Differentiation</span></td></tr></tfoot></table>
 ## Input Stubs
 
 Inputs can be defined with a set of `name (type[, description])` pairs. For example:
@@ -311,7 +337,7 @@ end
 * [ ] support Date data type
 * [ ] support Time data type
 * [ ] support DateTime data type
-* [ ] vertical tables
+* [x] vertical tables
 * [ ] rule code format
 
 ## Installation
