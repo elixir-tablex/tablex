@@ -99,6 +99,19 @@ defmodule Tablex.Parser.ExpressionTest do
     test "works with ranges" do
       assert_parse("100..200, >= 400", [100..200, {:>=, 400}])
     end
+
+    test "works with empty lists" do
+      assert_parse("[]", [])
+    end
+
+    test "works with single-element lists" do
+      assert_parse("[1]", [1])
+    end
+
+    test "works with multi-element lists" do
+      assert_parse("[1, 2]", [1, 2])
+      assert_parse("[foo,bar]", ["foo", "bar"])
+    end
   end
 
   describe "Parsing comparations" do

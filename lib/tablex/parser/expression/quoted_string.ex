@@ -1,4 +1,4 @@
-defmodule Tablex.Parser.Quoted do
+defmodule Tablex.Parser.Expression.QuotedString do
   @moduledoc false
 
   import NimbleParsec
