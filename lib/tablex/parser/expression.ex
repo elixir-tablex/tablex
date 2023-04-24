@@ -81,7 +81,8 @@ defmodule Tablex.Parser.Expression do
       string("T"),
       string("YES"),
       string("yes"),
-      string("true")
+      string("true"),
+      string("✅")
     ])
     |> lookahead(eow())
     |> replace(true)
@@ -93,7 +94,8 @@ defmodule Tablex.Parser.Expression do
       string("F"),
       string("NO"),
       string("no"),
-      string("false")
+      string("false"),
+      string("❌")
     ])
     |> lookahead(eow())
     |> replace(false)
