@@ -339,6 +339,7 @@ end
 * [ ] support DateTime data type
 * [x] vertical tables
 * [ ] rule code format
+* [ ] have a full specification documentation
 
 ## Installation
 
@@ -354,8 +355,12 @@ end
 
 The docs can be found at <https://hexdocs.pm/tablex>.
 
+## Related Projects
 
-## Credits
+* [Tablex View](https://github.com/elixir-tablex/tablex_view) - A renderer which transforms a decision table into HTML.
+
+
+## Acknowledgements
 
 - Tablex is heavily inspired by [Decision Model and Notation (DMN)](https://en.wikipedia.org/wiki/dmn) and its [FEEL][] expression language.
 - Tablex is built on top of the awesome [nimble_parsec][] library.
