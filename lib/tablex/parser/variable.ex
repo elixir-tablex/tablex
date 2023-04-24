@@ -2,7 +2,7 @@ defmodule Tablex.Parser.Variable do
   @moduledoc false
 
   import NimbleParsec
-  import Tablex.Parser.Quoted
+  import Tablex.Parser.Expression.QuotedString
   import Tablex.Parser.Space
 
   def variable do
