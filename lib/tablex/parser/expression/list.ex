@@ -5,7 +5,7 @@ defmodule Tablex.Parser.Expression.List do
   import Tablex.Parser.Expression.Range
   import Tablex.Parser.Expression.Numeric
   import Tablex.Parser.Expression.Bool
-  import Tablex.Parser.Expression.Comparation
+  import Tablex.Parser.Expression.Comparison
   import Tablex.Parser.Expression.QuotedString
   import Tablex.Parser.Expression.ImpliedString
   import Tablex.Parser.Expression.Null
@@ -14,7 +14,7 @@ defmodule Tablex.Parser.Expression.List do
   def list do
     choice([
       empty_list(),
-      explict_list(),
+      explicit_list(),
       implied_list()
     ])
   end
@@ -23,7 +23,7 @@ defmodule Tablex.Parser.Expression.List do
     string("[]") |> replace([])
   end
 
-  def explict_list do
+  def explicit_list do
     string("[")
     |> concat(
       choice([
@@ -52,7 +52,7 @@ defmodule Tablex.Parser.Expression.List do
   def list_item do
     choice([
       range(),
-      comparation(),
+      comparison(),
       numeric(),
       bool(),
       null(),
@@ -63,5 +63,5 @@ defmodule Tablex.Parser.Expression.List do
 
   @doc false
   def trans_list(["[", "]"]), do: []
-  def trans_list(["[", pased, "]"]), do: List.wrap(pased)
+  def trans_list(["[", passed, "]"]), do: List.wrap(passed)
 end

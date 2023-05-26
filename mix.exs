@@ -70,7 +70,7 @@ defmodule Tablex.MixProject do
         border-color: #DDD;
       }
 
-      table.tablex.horinzontal th {
+      table.tablex.horizontal th {
         border-bottom: double;
         font-weight: bold;
       }

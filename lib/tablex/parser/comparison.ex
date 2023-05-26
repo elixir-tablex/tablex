@@ -1,11 +1,11 @@
-defmodule Tablex.Parser.Expression.Comparation do
+defmodule Tablex.Parser.Expression.Comparison do
   @moduledoc false
 
   import NimbleParsec
   import Tablex.Parser.Space
   import Tablex.Parser.Expression.Numeric
 
-  def comparation do
+  def comparison do
     choice([
       string("!="),
       string(">="),
@@ -15,11 +15,11 @@ defmodule Tablex.Parser.Expression.Comparation do
     ])
     |> optional_space()
     |> concat(numeric())
-    |> reduce({__MODULE__, :trans_comparation, []})
+    |> reduce({__MODULE__, :trans_comparison, []})
   end
 
   @doc false
-  def trans_comparation([op, num]) do
+  def trans_comparison([op, num]) do
     {:"#{op}", num}
   end
 end

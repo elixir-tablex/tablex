@@ -33,9 +33,9 @@ defmodule Tablex.Parser.Rule do
     |> space()
     |> repeat_while(
       concat(expression(), space()),
-      {__MODULE__, :not_seperator, []}
+      {__MODULE__, :not_separator, []}
     )
-    |> concat(seperator())
+    |> concat(separator())
     |> space()
     |> concat(
       output_expression()
@@ -54,13 +54,13 @@ defmodule Tablex.Parser.Rule do
   end
 
   @doc false
-  def not_seperator(<<"|| ", _::binary>>, context, _, _),
+  def not_separator(<<"|| ", _::binary>>, context, _, _),
     do: {:halt, context}
 
-  def not_seperator(_rest, context, _, _),
+  def not_separator(_rest, context, _, _),
     do: {:cont, context}
 
-  def seperator do
+  def separator do
     string("||") |> replace(:||)
   end
 
