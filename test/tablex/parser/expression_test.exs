@@ -114,7 +114,7 @@ defmodule Tablex.Parser.ExpressionTest do
     end
   end
 
-  describe "Parsing comparations" do
+  describe "Parsing comparisons" do
     test "works with `>`" do
       assert_parse(">  1", {:>, 1})
       assert_parse("> 1", {:>, 1})

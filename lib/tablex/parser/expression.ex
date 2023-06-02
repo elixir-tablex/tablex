@@ -11,7 +11,7 @@ defmodule Tablex.Parser.Expression do
   import Tablex.Parser.Expression.ImpliedString
   import Tablex.Parser.Expression.QuotedString
   import Tablex.Parser.Expression.Null
-  import Tablex.Parser.Expression.Comparation
+  import Tablex.Parser.Expression.Comparison
 
   def expression do
     choice([
@@ -21,7 +21,7 @@ defmodule Tablex.Parser.Expression do
       numeric(),
       bool(),
       null(),
-      comparation(),
+      comparison(),
       quoted_string(),
       implied_string()
     ])

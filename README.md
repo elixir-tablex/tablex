@@ -41,12 +41,12 @@ Inside the table, we defined the decision logic with:
 1. An indicator of hit policy, `F` in this case meaning the first rule matched will be applied. See [`Hit Policies` section](#hit-policies) for more information.
 2. Two input stubs, `day` and `weather` which are both strings. See [`Input Stubs` section](#input-stubs)
 3. An output stub, `activity` in this case. See [`Output Stubs` section](#output-stubs)
-4. Six rules which take inputs and determine the acitivity output. See [`Rules` section](#rules)
+4. Six rules which take inputs and determine the activity output. See [`Rules` section](#rules)
 5. A friendly expression in each cell of the rules. See [`Expression` section](#expression)
 
 ## Vertical Table
 
-Vertical tables are the same as horinzontal ones. It's just a matter of direction.
+Vertical tables are the same as horizontal ones. It's just a matter of direction.
 The following tables are the same:
 
 ```
@@ -126,10 +126,10 @@ Currently only these types are supported:
 - literal numeric value: integer and float (without scientific notation)
 - literal quoted string in `"`
 - boolean
-- comparation: `>`, `>=`, `<`, `<=`
+- comparison: `>`, `>=`, `<`, `<=`
 - range, e.g. `5..10`
 - nil ("null")
-- list of numeric, string, range, bool, nil or comparation; can be mixed
+- list of numeric, string, range, bool, nil or comparison; can be mixed
 - any ("-")
 
 The following types of expressions are planned:

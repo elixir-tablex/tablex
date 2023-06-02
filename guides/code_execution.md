@@ -33,7 +33,7 @@ For example, the following code is not allowed:
 
 ## Variables
 
-We can refer to arbitary variable names as long as are provided in the binding argument of `Tablex.decide/2` or `Tablex/decide/3`. For example:
+We can refer to arbitrary variable names as long as are provided in the binding argument of `Tablex.decide/2` or `Tablex/decide/3`. For example:
 
     iex> table = Tablex.new("""
     ...>   M day_of_week || "Go to Library"  Volunteer  Blogging

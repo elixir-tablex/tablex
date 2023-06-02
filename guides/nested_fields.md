@@ -4,7 +4,7 @@ When working with nested data structures, Tablex allows either checking against 
 
 ## Path
 
-Pathes can be defined with `.` separator. For instance, `path.to.data` which will match `%{path: %{to: data}}` when used in input stubs, or meandeeply merging `%{path: %{to: data}}` into the output when used in output stubs.
+Paths can be defined with `.` separator. For instance, `path.to.data` which will match `%{path: %{to: data}}` when used in input stubs, or meandeeply merging `%{path: %{to: data}}` into the output when used in output stubs.
 
 ## Nested Input Fields
 
