@@ -1,6 +1,6 @@
 import Tablex
 
-sheet = ~RULES"""
+sheet = ~t"""
 F   Age (integer)  Years_of_service  || Holidays (float)
 1   >=60           -                 || 3
 2   45..59         <30               || 2

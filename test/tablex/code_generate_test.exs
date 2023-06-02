@@ -9,7 +9,7 @@ defmodule Tablex.CodeGenerateTest do
 
   test "it works" do
     table =
-      ~RULES"""
+      ~t"""
       F GPA       StandardizedTestScores ExtracurricularActivities RecommendationLetters || AdmissionDecision
       1 >=3.5     >1300                  >=2                       >=2                   || Accepted
       2 <3.5      1000..1300             1..2                      1..2                  || Waitlisted
@@ -43,7 +43,7 @@ defmodule Tablex.CodeGenerateTest do
 
   test "it works with lists" do
     table =
-      ~RULES"""
+      ~t"""
       F Day                  || OpenHours
       1 Mon,Tue,Wed,Thu,Fri  || "10:00 - 20:00"
       2 Sat                  || "10:00 - 18:00"
@@ -57,7 +57,7 @@ defmodule Tablex.CodeGenerateTest do
 
   test "it works with a complicated list" do
     table =
-      ~RULES"""
+      ~t"""
       F OrderValue  ShippingDestination     ShippingWeight || ShippingOption
       1 >=100,97    domestic                -              || "Free Shipping"
       2 -           domestic,international  <=5            || "Standard Shipping"
@@ -99,7 +99,7 @@ defmodule Tablex.CodeGenerateTest do
   describe "Generating code with `collect` hit policy tables" do
     test "works with simplest collect tables" do
       table =
-        ~RULES"""
+        ~t"""
         C || grade program
         1 || 1     science
         2 || 2     "visual art"
@@ -119,7 +119,7 @@ defmodule Tablex.CodeGenerateTest do
 
     test "works with inputs" do
       table =
-        ~RULES"""
+        ~t"""
         C grade || program
         1 1     || science
         2 2     || "visual art"
@@ -137,7 +137,7 @@ defmodule Tablex.CodeGenerateTest do
   describe "Generating code from a table with `merge` hit policy" do
     test "works" do
       table =
-        ~RULES"""
+        ~t"""
         M   Continent  Country  Province || Feature1 Feature2
         1   Asia       Thailand -        || true     true
         2   America    Canada   BC,ON    || -        true
@@ -164,7 +164,7 @@ defmodule Tablex.CodeGenerateTest do
   describe "Generating code from a table with `reverse_merge` hit policy" do
     test "works" do
       table =
-        ~RULES"""
+        ~t"""
         R   Continent  Country  Province || Feature1 Feature2
         1   Europe     -        -        || false    true
         2   Europe     France   -        || true     -

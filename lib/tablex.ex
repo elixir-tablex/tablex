@@ -25,11 +25,12 @@ defmodule Tablex do
   end
 
   @doc """
-  The same as `new/2`.
+  Same as `new/2`.
 
   ## Example
+      import Tablex
 
-      ~RULES\"""
+      ~t\"""
       F  value  || color
       1  >90    || red
       2  80..90 || orange
@@ -37,8 +38,8 @@ defmodule Tablex do
       4  <20    || blue
       \"""
   """
-  @spec sigil_RULES(String.t(), keyword()) :: Tablex.Table.t()
-  def sigil_RULES(content, opts) do
+  @spec sigil_t(String.t(), keyword()) :: Tablex.Table.t()
+  def sigil_t(content, opts) do
     new(content, opts)
   end
 end
