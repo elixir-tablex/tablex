@@ -1,6 +1,8 @@
 defmodule Tablex.InformativeRowTest do
   alias Tablex.Table
   use ExUnit.Case
+  import DoctestFile
+
   doctest_file("guides/informative_row.md")
 
   describe "Informative row" do

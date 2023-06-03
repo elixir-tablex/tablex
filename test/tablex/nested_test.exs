@@ -1,5 +1,7 @@
 defmodule Tablex.NestedTest do
   use ExUnit.Case
+  import DoctestFile
+
   doctest_file("guides/nested_fields.md")
 
   describe "Nested output definition" do
@@ -41,8 +43,7 @@ defmodule Tablex.NestedTest do
         2 -    || F
         """)
 
-      code =
-        Tablex.CodeGenerate.generate(table)
+      code = Tablex.CodeGenerate.generate(table)
 
       assert {%{hit: false}, _} = Code.eval_string(code, a: %{b: 10})
       assert {%{hit: true}, _} = Code.eval_string(code, a: %{b: 9})
@@ -56,8 +57,7 @@ defmodule Tablex.NestedTest do
         2 -      || F
         """)
 
-      code =
-        Tablex.CodeGenerate.generate(table)
+      code = Tablex.CodeGenerate.generate(table)
 
       assert {%{hit: false}, _} = Code.eval_string(code, a: %{b: %{c: 10}})
       assert {%{hit: true}, _} = Code.eval_string(code, a: %{b: %{c: 9}})
@@ -72,8 +72,7 @@ defmodule Tablex.NestedTest do
         2 -                   || true
         """)
 
-      code =
-        Tablex.CodeGenerate.generate(table)
+      code = Tablex.CodeGenerate.generate(table)
 
       assert {%{enabled: false}, _} = Code.eval_string(code, quest: %{brand: %{id: 602}})
     end

@@ -6,6 +6,7 @@ defmodule Tablex.MixProject do
       app: :tablex,
       version: "0.1.1-alpha.3",
       elixir: "~> 1.11",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: docs(),
@@ -179,4 +180,8 @@ defmodule Tablex.MixProject do
       }
     ]
   end
+
+  # Specifies which paths to compile per environment
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 end
