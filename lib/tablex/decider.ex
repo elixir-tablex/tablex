@@ -57,9 +57,20 @@ defmodule Tablex.Decider do
   defp context(inputs, args) do
     for %{name: name, path: path} <- inputs, into: %{} do
       path = path ++ [name]
-      {path, get_in(args, path)}
+      {path, safe_get_in(args, path)}
     end
     |> flatten_path()
+  end
+
+  defp safe_get_in(nil, _any), do: nil
+  defp safe_get_in(value, []), do: value
+
+  defp safe_get_in(args, [key | rest]) do
+    case args do
+      %{^key => value} -> safe_get_in(value, rest)
+      keyword when is_list(keyword) -> safe_get_in(args[key], rest)
+      _other -> safe_get_in(get_in(args, [key]), rest)
+    end
   end
 
   defp rules(%Table{rules: rules, inputs: inputs, outputs: outputs}) do

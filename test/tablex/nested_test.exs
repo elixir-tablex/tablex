@@ -18,6 +18,26 @@ defmodule Tablex.NestedTest do
                %{a: %{b: 3, c: 4}}
              ]
     end
+
+    defmodule StructA do
+      defstruct [:a]
+    end
+
+    defmodule StructB do
+      defstruct [:b]
+    end
+
+    test "works with structs" do
+      table =
+        Tablex.new("""
+        F a.b  || hit
+        1 <10  || T
+        2 -    || F
+        """)
+
+      assert %{hit: false} = Tablex.decide(table, %StructA{a: %StructB{b: 10}})
+      assert %{hit: true} = Tablex.decide(table, %StructA{a: %StructB{b: 9}})
+    end
   end
 
   describe "Nested input definition" do
