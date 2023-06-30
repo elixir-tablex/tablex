@@ -4,8 +4,9 @@ defmodule Tablex.Table do
   """
 
   alias Tablex.Variable
+  alias __MODULE__
 
-  @type t() :: %__MODULE__{
+  @type t() :: %Table{
           hit_policy: hit_policy(),
           inputs: [input()],
           outputs: [output()],
@@ -30,7 +31,7 @@ defmodule Tablex.Table do
 
   @doc false
   def new([{:horizontal, parsed}]) do
-    %__MODULE__{
+    %Table{
       hit_policy: parsed[:hit_policy],
       inputs: Keyword.get_values(parsed, :input),
       outputs: Keyword.get_values(parsed, :output),
@@ -54,7 +55,7 @@ defmodule Tablex.Table do
         _ -> []
       end)
 
-    %__MODULE__{
+    %Table{
       hit_policy: parsed[:hit_policy],
       inputs: inputs,
       outputs: outputs,

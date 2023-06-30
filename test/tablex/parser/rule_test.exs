@@ -60,6 +60,17 @@ defmodule Tablex.Parser.RuleTest do
     end
   end
 
+  describe "Range expression" do
+    test "works" do
+      assert {:ok,
+              [
+                rules: [
+                  [1, input: [1..10], output: [true]]
+                ]
+              ], _, _, _, _} = parse("1 1..10 || Y")
+    end
+  end
+
   defp parse(source) do
     RuleParser.parse(source)
   end

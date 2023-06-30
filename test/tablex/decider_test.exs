@@ -2,6 +2,7 @@ defmodule Tablex.DeciderTest do
   alias Tablex.Decider
 
   use ExUnit.Case
+  doctest Decider
 
   describe "match_rule?/2" do
     test "works" do
