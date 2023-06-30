@@ -27,6 +27,18 @@ defmodule Tablex.CodeExecutionTest do
       assert [%{div: 5.0}] = run(table, a: 5.0, b: 1)
     end
 
+    test "works with collect hit policy and nested inputs" do
+      table =
+        Tablex.new("""
+        C a.a  b.b   || div
+        1 -    0     || "b.b is zero"
+        2 -    !=0   || `a.a / b.b`
+        """)
+
+      assert [%{div: "b.b is zero"}] = run(table, a: 5, b: %{b: 0})
+      assert [%{div: 5.0}] = run(table, a: %{a: 5.0}, b: %{b: 1})
+    end
+
     test "works with `merge` hit policy" do
       table =
         Tablex.new("""

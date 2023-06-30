@@ -19,6 +19,11 @@ defmodule Tablex.Parser do
   import Tablex.Parser.HorizontalTable
   import Tablex.Parser.VerticalTable
 
+  @type parse_error() ::
+          {:error,
+           {:tablex_parse_error, {location(), reason :: :invalid | term(), rest :: binary()}}}
+  @type location() :: [{:line, non_neg_integer()} | {:column, non_neg_integer()}]
+
   table =
     choice([
       h_table() |> tag(:horizontal),
@@ -26,32 +31,39 @@ defmodule Tablex.Parser do
     ])
 
   defparsec(:table, table, debug: false)
+  defparsec(:expr, Tablex.Parser.Expression.expression())
 
   @doc """
   Parse a string into a table struct.
 
   ## Returns
 
-  `%Tablex.Table{...}` if succeeds, other wise `{:error, {:invalid, reason, rest}}`
+  `%Tablex.Table{...}` if succeeds, other wise `{:error, {:tablex_parse_error, location, reason, rest}}`
   """
-  @spec parse(String.t(), []) :: Table.t() | {:error, {:invalid, String.t(), String.t()}}
+  @spec parse(String.t(), []) :: Table.t() | parse_error()
   def parse(content, _opts) do
     case table(content) do
       {:ok, table, "", _context, _, _} ->
         Table.new(table)
 
-      {:error, reason, rest, _context, {line, _}, offset} ->
-        print_error(reason, line, offset, content)
-        {:error, {:invalid, reason, rest}}
+      {:ok, _table, rest, _context, {line, _offset}, _column} ->
+        print_error("unexpected input", line, 0, content)
+        location = [line: line, column: 0]
+        {:error, {:tablex_parse_error, {location, :invalid, rest}}}
+
+      {:error, reason, rest, _context, {line, _}, column} ->
+        print_error(reason, line, column, content)
+        location = [line: line, column: column]
+        {:error, {:tablex_parse_error, {location, reason, rest}}}
     end
   end
 
-  defp print_error(reason, line, offset, content) do
+  defp print_error(reason, line, column, content) do
     Logger.critical("""
-    Error parsing decision table [L#{line} C#{offset}]:
+    Error parsing decision table [L#{line} C#{column}]:
 
-    #{String.split(content, "\n") |> Enum.at(line - 1)}
-    #{String.duplicate(" ", offset)}^ #{reason}.
+    #{String.split(content, "\n") |> Enum.at(line)}
+    #{String.duplicate(" ", column)}^ #{reason}.
     """)
   end
 
