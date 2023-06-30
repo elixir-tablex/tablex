@@ -185,10 +185,103 @@ defmodule Tablex.CodeGenerateTest do
         %{feature1: true, feature2: true}
       )
     end
+
+    test "works with another example" do
+      table =
+        Tablex.new("""
+        ====
+        R               || 1            2  3    4
+        target.store_id || -            -  1    1,2
+        ====
+        gps_provider    || gps_tracker  -  -    fancy_tracker
+        a.b.c           || xxx          -  -    -
+        a.b.d           || no           -  yes  -
+        """)
+
+      assert_eval(table, [target: %{store_id: 1}], %{
+        gps_provider: "fancy_tracker",
+        a: %{
+          b: %{
+            c: "xxx",
+            d: true
+          }
+        }
+      })
+    end
+  end
+
+  describe "Nested inputs" do
+    test "works" do
+      table =
+        Tablex.new("""
+        M   target.country  target.province || Feature1 Feature2
+        1   Canada          BC,ON           || -        true
+        2   Canada          -               || true     false
+        """)
+
+      assert_eval(
+        table,
+        [target: %{country: "Canada", province: "BC"}],
+        %{feature1: true, feature2: true}
+      )
+    end
+
+    test "works with another example" do
+      table =
+        Tablex.new("""
+        C plan.name || region      id host          port
+        1 T1,T2     || "Hong Kong" 1  example.com   8080
+        2 T2        || "Hong Kong" 2  example.com   8081
+        3 T3        || "Hong Kong" 3  example.com   8082
+        """)
+
+      assert_eval(
+        table,
+        [plan: %{name: "T1"}],
+        [
+          %{id: 1, port: 8080, host: "example.com", region: "Hong Kong"}
+        ]
+      )
+
+      assert_eval(
+        table,
+        [plan: %{name: "T2"}],
+        [
+          %{id: 1, port: 8080, host: "example.com", region: "Hong Kong"},
+          %{id: 2, port: 8081, host: "example.com", region: "Hong Kong"}
+        ]
+      )
+
+      assert_eval(
+        table,
+        [plan: %{name: "T3"}],
+        [
+          %{id: 3, port: 8082, host: "example.com", region: "Hong Kong"}
+        ]
+      )
+    end
+  end
+
+  describe "Nested outputs" do
+    test "works" do
+      table =
+        Tablex.new("""
+        M   target.country  target.province || Feature1.enabled
+        1   Canada          BC,ON           || -
+        2   Canada          -               || true
+        """)
+
+      assert_eval(
+        table,
+        [target: %{country: "Canada", province: "BC"}],
+        %{feature1: %{enabled: true}}
+      )
+    end
   end
 
   defp assert_eval(table, args, expect) do
     code = generate(table)
+    # IO.puts(code)
 
     {ret, _} = Code.eval_string(code, args)
     assert expect == ret

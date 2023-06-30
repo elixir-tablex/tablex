@@ -17,6 +17,7 @@ defmodule Tablex.Parser.InformativeRow do
     )
     |> concat(string("||") |> ignore())
     |> times(concat(space(), info()) |> tag(:output), min: 1)
+    |> optional_space()
     |> reduce({__MODULE__, :trans_info_row, []})
   end
 

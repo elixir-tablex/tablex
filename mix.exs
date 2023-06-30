@@ -26,7 +26,8 @@ defmodule Tablex.MixProject do
     [
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:nimble_parsec, "~> 1.3"},
-      {:formular, "~> 0.3"}
+      {:formular, "~> 0.3"},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
     ]
   end
 

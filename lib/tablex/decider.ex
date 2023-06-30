@@ -5,16 +5,12 @@ defmodule Tablex.Decider do
   """
 
   alias Tablex.Table
+  import Tablex.Rules, only: [match_expect?: 2]
 
   @type options :: []
 
   @doc """
   Run the decision process on the given table, arguments, and options.
-
-  ## Examples
-
-      iex> decide(table, args)
-      output
   """
   @spec decide(Table.t(), keyword(), options()) :: map() | {:error, :hit_policy_not_implemented}
   def decide(table, args, opts \\ [])
@@ -177,25 +173,6 @@ defmodule Tablex.Decider do
       match_expect?(expect, get_in(context, key))
     end)
   end
-
-  def match_expect?(expect, value) when is_list(expect) do
-    Enum.any?(expect, &match_expect?(&1, value))
-  end
-
-  def match_expect?(%Range{first: first, last: last}, value) when is_number(value) do
-    # we can't use `in` here because value may be a float.
-    value >= first and value <= last
-  end
-
-  def match_expect?({:!=, x}, value) when value != x, do: true
-  def match_expect?({:>, x}, value) when is_number(value) and value > x, do: true
-  def match_expect?({:>=, x}, value) when is_number(value) and value >= x, do: true
-  def match_expect?({:<, x}, value) when is_number(value) and value < x, do: true
-  def match_expect?({:<=, x}, value) when is_number(value) and value <= x, do: true
-
-  def match_expect?(:any, _), do: true
-  def match_expect?(expect, expect), do: true
-  def match_expect?(_, _), do: false
 
   defp flatten_path(outputs) do
     Enum.reduce(outputs, %{}, fn {path, v}, acc ->
