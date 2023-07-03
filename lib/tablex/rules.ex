@@ -55,6 +55,19 @@ defmodule Tablex.Rules do
       %Tablex.Rules.Rule{id: 2, inputs: [{[:country], "US"}, {[:state], :any}], outputs: [{[:feature_enabled], false}]},
       %Tablex.Rules.Rule{id: 1, inputs: [{[:country], "US"}, {[:state], "CA"}], outputs: [{[:feature_enabled], true}]}
     ]
+
+  Nested inputs are supported.
+
+    iex> table = Tablex.new(\"""
+    ...>   F  foo.value  || color
+    ...>   1  >90        || red
+    ...>   2  80..90     || orange
+    ...>   3  20..79     || green
+    ...>   4  <20        || blue
+    ...>   \""")
+    ...> Tablex.Rules.get_rules(table, %{foo: %{value: 80}})
+    [%Tablex.Rules.Rule{id: 2, inputs: [{[:foo, :value], 80..90}], outputs: [{[:color], "orange"}]}]
+
   """
   @spec get_rules(table(), keyword()) :: [rule()]
   def get_rules(%Table{} = table, args) do
@@ -136,5 +149,129 @@ defmodule Tablex.Rules do
 
   defp order_by_priority(matched_rules, _hit_policy) do
     Enum.sort_by(matched_rules, & &1.id, :desc)
+  end
+
+  @type updates() :: [update()]
+  @type update() :: {:input, [any()] | map()} | {:output, [any()] | map()}
+
+  @doc """
+  Update an existing rule.
+
+  ## Example
+
+  A basic example of updating a rule:
+
+    iex> table = Tablex.new(\"""
+    ...>   F  value  || color
+    ...>   1  -      || red
+    ...>   \""")
+    ...> table = Tablex.Rules.update_rule(table, 1, input: [80..90], output: ["orange"])
+    ...> table.rules
+    [[1, input: [80..90], output: ["orange"]]]
+
+  You can also updte a rule with changes in a map format:
+
+    iex> table = Tablex.new(\"""
+    ...>   F  value  || color
+    ...>   1  -      || red
+    ...>   \""")
+    ...> table = Tablex.Rules.update_rule(table, 1, input: %{value: 80..90}, output: %{color: "orange"})
+    ...> table.rules
+    [[1, input: [80..90], output: ["orange"]]]
+
+  You can only update input values:
+
+    iex> table = Tablex.new(\"""
+    ...>   F  value  || color
+    ...>   1  -      || red
+    ...>   \""")
+    ...> table = Tablex.Rules.update_rule(table, 1, input: %{value: 80..90})
+    ...> table.rules
+    [[1, input: [80..90], output: ["red"]]]
+
+  You can only update output values:
+
+    iex> table = Tablex.new(\"""
+    ...>   F  value  || color
+    ...>   1  -      || red
+    ...>   \""")
+    ...> table = Tablex.Rules.update_rule(table, 1, output: %{color: "orange"})
+    ...> table.rules
+    [[1, input: [:any], output: ["orange"]]]
+
+  For updating nested input or output values, both nested map or direct values are supported:
+
+    iex> table = Tablex.new(\"""
+    ...>   F  target.value  || color
+    ...>   1  -             || red
+    ...>   \""")
+    ...> table = Tablex.Rules.update_rule(table, 1, input: %{target: %{value: 80..90}}, output: %{color: "orange"})
+    ...> table.rules
+    [[1, input: [80..90], output: ["orange"]]]
+
+    iex> table = Tablex.new(\"""
+    ...>   F  target.value  || color
+    ...>   1  -             || red
+    ...>   \""")
+    ...> table = Tablex.Rules.update_rule(table, 1, input: [80..90], output: ["orange"])
+    ...> table.rules
+    [[1, input: [80..90], output: ["orange"]]]
+  """
+  @spec update_rule(table(), integer(), updates()) :: table()
+  def update_rule(%Table{} = table, id, updates) do
+    update_input = Keyword.get(updates, :input) |> to_updater(table.inputs)
+    update_output = Keyword.get(updates, :output) |> to_updater(table.outputs)
+
+    table
+    |> Map.update!(:rules, fn
+      rules ->
+        Enum.map(rules, fn
+          [^id, {:input, input}, {:output, output}] ->
+            [id, {:input, update_input.(input)}, {:output, update_output.(output)}]
+
+          otherwise ->
+            otherwise
+        end)
+    end)
+  end
+
+  defp to_updater(%{} = update, defs) do
+    defs
+    |> Stream.with_index()
+    |> Stream.map(fn {%Tablex.Variable{name: name, path: path}, index} ->
+      full_path = path ++ [name]
+
+      case at_path(update, full_path) do
+        nil ->
+          & &1
+
+        value ->
+          &List.replace_at(&1, index, value)
+      end
+    end)
+    |> Enum.reduce(& &1, fn f, acc ->
+      fn update -> acc.(update) |> f.() end
+    end)
+  end
+
+  defp to_updater(nil, _) do
+    & &1
+  end
+
+  defp to_updater(new_value, _) do
+    fn _ -> new_value end
+  end
+
+  defp at_path(%{} = map, path) do
+    Enum.reduce_while(path, map, fn
+      seg, acc ->
+        case acc do
+          %{^seg => value} ->
+            {:cont, value}
+
+          _ ->
+            {:halt, nil}
+        end
+    end)
   end
 end
