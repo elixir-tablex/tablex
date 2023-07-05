@@ -162,6 +162,7 @@ defmodule Tablex.Formatter do
       line
       |> Tuple.to_list()
       |> Enum.join(" ")
+      |> String.trim_trailing()
     end)
   end
 end
