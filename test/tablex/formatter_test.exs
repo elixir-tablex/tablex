@@ -46,10 +46,109 @@ defmodule Tablex.FormatterTest do
 
       assert_format(table)
     end
+
+    test "update rule ids" do
+      table = %Tablex.Table{
+        hit_policy: :first_hit,
+        inputs: [
+          %Tablex.Variable{
+            name: :id,
+            label: "store.id",
+            desc: "Store Id",
+            type: :integer,
+            path: [:store]
+          },
+          %Tablex.Variable{
+            name: :id,
+            label: "quest.brand.id",
+            desc: "Brand Id",
+            type: :integer,
+            path: [:quest, :brand]
+          },
+          %Tablex.Variable{
+            name: :picking_only,
+            label: "quest.pickingAndDelivery.pickingOnly",
+            desc: "Picking-only?",
+            type: :bool,
+            path: [:quest, :picking_and_delivery]
+          },
+          %Tablex.Variable{
+            name: :delivery_type,
+            label: "quest.pickingAndDelivery.deliveryType",
+            desc: "Delivery Type",
+            type: :string,
+            path: [:quest, :picking_and_delivery]
+          },
+          %Tablex.Variable{
+            name: :type,
+            label: "quest.type",
+            desc: nil,
+            type: :string,
+            path: [:quest]
+          }
+        ],
+        outputs: [
+          %Tablex.Variable{
+            name: :enabled,
+            label: "enabled",
+            desc: nil,
+            type: :undefined,
+            path: []
+          }
+        ],
+        rules: [
+          [1, {:input, [:any, :any, true, :any, :any]}, {:output, [false]}],
+          [2, {:input, [:any, 602, :any, "VENTEL", :any]}, {:output, [false]}],
+          [3, {:input, [:any, [719, 749], :any, :any, :any]}, {:output, [true]}],
+          [4, {:input, [:any, ~c"x|", :any, :any, :any]}, {:output, [true]}],
+          [5, {:input, [:any, 131, :any, :any, :any]}, {:output, [true]}],
+          [6, {:input, [:any, 601, :any, :any, :any]}, {:output, [true]}],
+          [7, {:input, [:any, 729, :any, :any, :any]}, {:output, [true]}],
+          [8, {:input, [:any, 724, :any, :any, :any]}, {:output, [true]}],
+          [9, {:input, [:any, 723, :any, :any, :any]}, {:output, [true]}],
+          [9, {:input, [:any, 106, :any, :any, :any]}, {:output, [true]}],
+          [9, {:input, [:any, 244, :any, :any, :any]}, {:output, [true]}],
+          [9, {:input, [:any, 735, :any, :any, :any]}, {:output, [true]}],
+          [9, {:input, [:any, 700, :any, :any, :any]}, {:output, [true]}],
+          [9, {:input, [:any, 732, :any, :any, :any]}, {:output, [true]}],
+          [10, {:input, [2434, :any, :any, :any, :any]}, {:output, [true]}],
+          [10, {:input, [2390, :any, :any, :any, :any]}, {:output, [true]}],
+          [10, {:input, [19849, :any, :any, :any, :any]}, {:output, [true]}],
+          [10, {:input, [20923, :any, :any, :any, :any]}, {:output, [true]}],
+          [
+            10,
+            {:input,
+             [
+               [20922, 20921, 20920],
+               :any,
+               :any,
+               :any,
+               :any
+             ]},
+            {:output, [true]}
+          ],
+          [11, {:input, [123, 719, :any, :any, :any]}, {:output, [true]}],
+          [12, {:input, [:any, :any, :any, :any, :any]}, {:output, [false]}]
+        ],
+        valid?: :undefined,
+        table_dir: :h
+      }
+
+      assert_format(table)
+    end
   end
 
   defp assert_format(table) do
     # table |> Formatter.to_s() |> IO.puts()
-    assert table |> Formatter.to_s() |> Tablex.new() == table
+    assert table |> Formatter.to_s() |> Tablex.new() == fix_ids(table)
+  end
+
+  defp fix_ids(table) do
+    rules =
+      table.rules
+      |> Stream.with_index(1)
+      |> Enum.map(fn {[_ | rest], index} -> [index | rest] end)
+
+    %{table | rules: rules}
   end
 end

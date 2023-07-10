@@ -103,18 +103,21 @@ defmodule Tablex.Formatter do
     end
   end
 
-  defp render_var_desc(%Variable{desc: nil}), do: "-"
   defp render_var_desc(%Variable{type: :undefined}), do: "-"
 
-  defp render_var_desc(%Variable{type: type, desc: desc}),
+  defp render_var_desc(%Variable{type: type, desc: desc}) when not is_nil(desc),
     do: ["(", type_to_string(type), ", ", desc, ")"] |> IO.iodata_to_binary()
+
+  defp render_var_desc(%Variable{type: type}),
+    do: ["(", type_to_string(type), ")"] |> IO.iodata_to_binary()
 
   defp render_rules(table) do
     table.rules
+    |> Stream.with_index(1)
     |> Enum.map(&render_rule/1)
   end
 
-  defp render_rule([id, {:input, input_values}, {:output, output_values}]) do
+  defp render_rule({[_original_id, {:input, input_values}, {:output, output_values}], id}) do
     [
       to_string(id),
       Enum.map(input_values, &render_value/1),
@@ -124,22 +127,26 @@ defmodule Tablex.Formatter do
     |> List.flatten()
   end
 
-  defp render_value([_ | _] = value) do
+  @doc """
+  Render a value into inspectable text.
+  """
+  @spec render_value(any) :: String.t()
+  def render_value([_ | _] = value) do
     Enum.map_join(value, ",", &render_value/1)
   end
 
-  defp render_value(:any), do: "-"
-  defp render_value(true), do: "yes"
-  defp render_value(false), do: "no"
-  defp render_value(n) when is_number(n), do: to_string(n)
-  defp render_value(nil), do: "null"
-  defp render_value(%Range{first: first, last: last}), do: "#{first}..#{last}"
+  def render_value(:any), do: "-"
+  def render_value(true), do: "yes"
+  def render_value(false), do: "no"
+  def render_value(n) when is_number(n), do: to_string(n)
+  def render_value(nil), do: "null"
+  def render_value(%Range{first: first, last: last}), do: "#{first}..#{last}"
 
-  defp render_value(str) when is_binary(str) do
+  def render_value(str) when is_binary(str) do
     maybe_quoted(str)
   end
 
-  defp render_value(value) do
+  def render_value(value) do
     inspect(value)
   end
 

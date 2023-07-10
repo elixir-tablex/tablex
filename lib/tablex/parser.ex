@@ -40,18 +40,24 @@ defmodule Tablex.Parser do
       {:ok, table, "", _context, _, _} ->
         Table.new(table)
 
-      {:error, reason, rest, _context, {line, _}, offset} ->
-        print_error(reason, line, offset, content)
-        {:error, {:invalid, reason, rest}}
+      {:ok, _table, rest, _context, {line, _offset}, _column} ->
+        print_error("unexpected input", line, 0, content)
+        location = [line: line, column: 0]
+        {:error, {location, :invalid, rest}}
+
+      {:error, reason, rest, _context, {line, _}, column} ->
+        print_error(reason, line, column, content)
+        location = [line: line, column: column]
+        {:error, {location, reason, rest}}
     end
   end
 
-  defp print_error(reason, line, offset, content) do
+  defp print_error(reason, line, column, content) do
     Logger.critical("""
-    Error parsing decision table [L#{line} C#{offset}]:
+    Error parsing decision table [L#{line} C#{column}]:
 
-    #{String.split(content, "\n") |> Enum.at(line - 1)}
-    #{String.duplicate(" ", offset)}^ #{reason}.
+    #{String.split(content, "\n") |> Enum.at(line)}
+    #{String.duplicate(" ", column)}^ #{reason}.
     """)
   end
 
