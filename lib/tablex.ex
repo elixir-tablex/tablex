@@ -20,8 +20,10 @@ defmodule Tablex do
         \""")
   """
   @spec new(String.t(), keyword()) :: Tablex.Table.t()
-  def new(content, opts \\ []) do
-    Tablex.Parser.parse(content, opts)
+  def new(content, opts \\ []) when is_binary(content) do
+    content
+    |> String.trim_trailing()
+    |> Tablex.Parser.parse(opts)
   end
 
   if Version.compare(System.version(), "1.15.0-dev") in [:eq, :gt] do

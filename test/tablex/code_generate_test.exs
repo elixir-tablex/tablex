@@ -187,8 +187,43 @@ defmodule Tablex.CodeGenerateTest do
     end
   end
 
+  describe "Nested inputs" do
+    test "works" do
+      table =
+        Tablex.new("""
+        M   target.country  target.province || Feature1 Feature2
+        1   Canada          BC,ON           || -        true
+        2   Canada          -               || true     false
+        """)
+
+      assert_eval(
+        table,
+        [target: %{country: "Canada", province: "BC"}],
+        %{feature1: true, feature2: true}
+      )
+    end
+  end
+
+  describe "Nested outputs" do
+    test "works" do
+      table =
+        Tablex.new("""
+        M   target.country  target.province || Feature1.enabled
+        1   Canada          BC,ON           || -
+        2   Canada          -               || true
+        """)
+
+      assert_eval(
+        table,
+        [target: %{country: "Canada", province: "BC"}],
+        %{feature1: %{enabled: true}}
+      )
+    end
+  end
+
   defp assert_eval(table, args, expect) do
     code = generate(table)
+    IO.puts(code)
 
     {ret, _} = Code.eval_string(code, args)
     assert expect == ret

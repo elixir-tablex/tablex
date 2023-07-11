@@ -5,6 +5,24 @@ defmodule Tablex.CodeGenerate do
 
   alias Tablex.Parser
   alias Tablex.Table
+  alias Tablex.Util.DeepMap
+
+  @flatten_path """
+    put_recursively = fn
+      %{} = acc, [path], value, _ ->
+        Map.put(acc, path, value)
+
+      %{} = acc, [head | rest], value, f ->
+        v = f.(%{}, rest, value, f)
+        Map.update(acc, head, v, &Map.merge(&1, v))
+    end
+
+    flatten_path = fn outputs ->
+      Enum.reduce(outputs, %{}, fn {path, v}, acc ->
+        acc |> put_recursively.(path, v, put_recursively)
+      end)
+    end
+  """
 
   defguardp(
     is_literal(exp)
@@ -93,49 +111,49 @@ defmodule Tablex.CodeGenerate do
   end
 
   def generate(%Table{hit_policy: :merge} = table) do
-    empty = for %{name: var} <- table.outputs, into: %{}, do: {var, :undefined}
-    inputs = for %{name: var} <- table.inputs, do: var
+    empty = table.outputs |> Enum.map(fn _ -> :any end)
+    inputs = for %{name: var, path: path} <- table.inputs, do: (path ++ [var]) |> Enum.join(".")
 
     """
     binding = {#{inputs |> Enum.join(", ")}}
 
-    [#{table.rules |> expand_rules() |> Stream.map(fn [_, {:input, input}, {:output, outputs}] -> """
+    out_values =
+      [#{table.rules |> expand_rules() |> Stream.map(fn [_, {:input, rule_inputs}, {:output, rule_outputs} | _] -> """
       fn
-        #{rule_cond(input, table.inputs)} ->
-          #{to_output(outputs, table.outputs)}
+        #{rule_cond(rule_inputs, table.inputs)} ->
+          [#{rule_output_values(rule_outputs)}]
 
         _ ->
           nil
       end
       """ |> String.trim_trailing() end) |> Enum.join(",\n")}]
-    |> Enum.reduce_while(#{inspect(empty)}, fn rule_fn, acc ->
-      case rule_fn.(binding) do
-        %{} = output ->
-          acc =
-            Enum.reduce(acc, acc, fn
-              {k, :undefined}, acc ->
-                case Map.get(output, k) do
-                  :any ->
-                    acc
+      |> Enum.reduce_while(#{inspect(empty)}, fn rule_fn, acc ->
+        case rule_fn.(binding) do
+          output when is_list(output) ->
+            acc =
+              output
+              |> Stream.with_index()
+              |> Enum.reduce(acc, fn
+                {:any, _}, acc ->
+                  acc
 
-                  v ->
-                    Map.put(acc, k, v)
-                end
+                {other, idx}, acc ->
+                  List.replace_at(acc, idx, other)
+              end)
 
-              _, acc ->
-                acc
-            end)
+            if Enum.member?(acc, :any),
+              do: {:cont, acc},
+              else: {:halt, acc}
 
-          if Map.values(acc) |> Enum.member?(:undefined) do
+          nil ->
             {:cont, acc}
-          else
-            {:halt, acc}
-          end
+        end
+      end)
 
-        nil ->
-          {:cont, acc}
-      end
-    end)
+    #{@flatten_path}
+
+    Stream.zip([#{output_pathes(table.outputs) |> Enum.join(", ")}], out_values)
+    |> flatten_path.()
     """
   end
 
@@ -223,44 +241,45 @@ defmodule Tablex.CodeGenerate do
   defp pattern_guard({comp, number}, %{name: name, path: path}) when comp in ~w[!= < <= >= >]a do
     var_name = Enum.join(path ++ [name], "_")
 
-    {on_path(var_name, tl(path ++ [name])),
-     "is_number(#{var_name}) and #{var_name} #{comp} #{number}"}
+    {var_name, "is_number(#{var_name}) and #{var_name} #{comp} #{number}"}
   end
 
   defp pattern_guard(%Range{first: first, last: last}, %{name: name, path: path}) do
     var_name = Enum.join(path ++ [name], "_")
 
-    {on_path(var_name, tl(path ++ [name])), "#{var_name} in #{first}..#{last}"}
+    {var_name, "#{var_name} in #{first}..#{last}"}
   end
 
   defp pattern_guard(list, %{name: name, path: path}) when is_list(list) do
     var_name = Enum.join(path ++ [name], "_")
 
-    {on_path(var_name, tl(path ++ [name])), "#{var_name} in #{inspect(list)}"}
+    {var_name, "#{var_name} in #{inspect(list)}"}
   end
 
-  defp pattern_guard(literal, %{name: name, path: path}) when is_literal(literal) do
-    on_path(inspect(literal), tl(path ++ [name]))
-  end
-
-  defp on_path(name, []), do: name
-
-  defp on_path(name, [head | tail]) do
-    "%{#{head}: #{on_path(name, tail)}}"
+  defp pattern_guard(literal, _) when is_literal(literal) do
+    inspect(literal)
   end
 
   defp to_output(outputs, out_def) do
-    parts =
+    map =
       Stream.zip(out_def, outputs)
-      |> Stream.map(fn
-        {%{name: name}, {:code, code}} ->
-          "#{name}: #{code}"
+      |> Map.new(fn
+        {%{name: name, path: path}, {:code, code}} ->
+          {path ++ [name], code}
 
-        {%{name: name}, value} ->
-          "#{name}: #{inspect(value)}"
+        {%{name: name, path: path}, value} ->
+          {path ++ [name], value}
       end)
-      |> Enum.join(", ")
 
-    ["%{", parts, "}"]
+    map |> DeepMap.flatten() |> inspect()
+  end
+
+  defp rule_output_values(outputs) do
+    outputs
+    |> Enum.map_join(", ", &inspect/1)
+  end
+
+  defp output_pathes(outputs) do
+    for %{name: name, path: path} <- outputs, do: inspect(path ++ [name])
   end
 end

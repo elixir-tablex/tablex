@@ -138,6 +138,23 @@ defmodule Tablex.FormatterTest do
     end
   end
 
+  describe "Formatting vertical tables" do
+    test "works" do
+      table =
+        Tablex.new("""
+        ====
+        F    || 1         2        3
+        age  || >50       -        -
+        i    || >8.0      >5.0     -
+        ====
+        test || positive  positive negative
+        act  || hospital  observe  rest
+        """)
+
+      assert_format(table)
+    end
+  end
+
   defp assert_format(table) do
     # table |> Formatter.to_s() |> IO.puts()
     assert table |> Formatter.to_s() |> Tablex.new() == fix_ids(table)
