@@ -14,7 +14,8 @@ defmodule Tablex.Optimizer.Helper do
   @doc """
   Order an already sorted, list of rules by hit policy.
   """
-  @spec order_by_hit_policy([rule()], current_order :: order(), Tablex.HitPolicy.t()) :: [rule()]
+  @spec order_by_hit_policy([rule()], current_order :: order(), Tablex.HitPolicy.hit_policy()) ::
+          [rule()]
   def order_by_hit_policy(rules, :h2l, :reverse_merge),
     do: rules |> Enum.reverse()
 
