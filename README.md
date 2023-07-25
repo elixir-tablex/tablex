@@ -338,7 +338,7 @@ end
 * [ ] support Time data type
 * [ ] support DateTime data type
 * [x] vertical tables
-* [ ] rule code format
+* [x] rule code format
 * [ ] have a full specification documentation
 
 ## Installation
