@@ -5,6 +5,10 @@ defmodule Tablex.Formatter.Value do
   Render a value into inspectable text.
   """
   @spec render_value(any) :: String.t()
+  def render_value([value]) do
+    ["[", render_value(value), "]"] |> IO.iodata_to_binary()
+  end
+
   def render_value([_ | _] = value) do
     Enum.map_join(value, ",", &render_value/1)
   end
