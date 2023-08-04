@@ -104,5 +104,21 @@ defmodule Tablex.Optimizer.RemoveDeadRulesTest do
                ]
              } = RemoveDeadRules.optimize(table)
     end
+
+    test "works with `merge` hit_policy" do
+      table =
+        Tablex.new("""
+        M a.b   || hit
+        1 1,2,3 || T
+        2 1     || F
+        3 2     || F
+        """)
+
+      assert %{
+               rules: [
+                 [1, {:input, [[1, 2, 3]]}, {:output, [true]}]
+               ]
+             } = RemoveDeadRules.optimize(table)
+    end
   end
 end

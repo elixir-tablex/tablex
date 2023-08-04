@@ -4,59 +4,145 @@ defmodule Tablex.Optimizer.MergeRules do
   """
 
   alias Tablex.Table
-  import Tablex.Optimizer.Helper, only: [fix_ids: 1]
+  alias Tablex.Util.ListBreaker
+
+  import Tablex.Optimizer.Helper,
+    only: [
+      fix_ids: 1,
+      conflict_free_output: 2,
+      meaningful_output?: 1
+    ]
 
   def optimize(%Table{} = table) do
-    merge_rules(table)
+    table
+    |> break_list_rules()
+    |> merge_rules_by_same_input()
+    |> merge_rules_by_same_output()
+    |> Map.update!(:rules, &fix_ids/1)
   end
 
-  defp merge_rules(%Table{rules: rules, hit_policy: :merge} = table) do
-    %{table | rules: do_merge_rules(rules) |> fix_ids()}
+  defp break_list_rules(%Table{rules: rules} = table) do
+    rules =
+      rules
+      |> Enum.flat_map(fn [i, {:input, input}, {:output, output}] ->
+        input
+        |> ListBreaker.flatten_list()
+        |> Enum.map(&[i, {:input, &1}, {:output, output}])
+      end)
+
+    %{table | rules: rules}
   end
 
-  defp merge_rules(%Table{rules: rules, hit_policy: :reverse_merge} = table) do
-    %{table | rules: rules |> Enum.reverse() |> do_merge_rules() |> Enum.reverse() |> fix_ids()}
+  # if two rules have the same input, the rule with lower priority would be examined
+  # to have only stubs that are not covered by the other rule. If all stubs after
+  # the examination of the lower priority rule are covered by the other rule, then
+  # the lower priority rule is removed directly.
+  defp merge_rules_by_same_input(%Table{rules: rules, hit_policy: :merge} = table) do
+    # For tables with `:merge` hit policy, the higher priority the rule has, the
+    # higher the prosition it is.
+    %{table | rules: do_merge_rules_by_same_input(rules)}
   end
 
-  defp merge_rules(%Table{} = table),
+  defp merge_rules_by_same_input(%Table{rules: rules, hit_policy: :reverse_merge} = table) do
+    %{
+      table
+      | rules:
+          rules
+          |> Enum.reverse()
+          |> do_merge_rules_by_same_input()
+          |> Enum.reverse()
+    }
+  end
+
+  defp merge_rules_by_same_input(%Table{} = table) do
+    table
+  end
+
+  defp do_merge_rules_by_same_input(rules) when is_list(rules) do
+    do_merge_rules_by_same_input(rules, [])
+    |> Stream.filter(fn [_, _, {:output, output}] ->
+      meaningful_output?(output)
+    end)
+    |> Enum.reverse()
+  end
+
+  defp do_merge_rules_by_same_input([], acc), do: acc
+
+  defp do_merge_rules_by_same_input([head | rest], higher_priority_rules) do
+    do_merge_rules_by_same_input(rest, [
+      try_merge_output_in(higher_priority_rules, head) | higher_priority_rules
+    ])
+  end
+
+  defp try_merge_output_in(higher_priority_rules, rule) do
+    Enum.reduce(higher_priority_rules, rule, fn
+      [_, {:input, input}, {:output, hp_output}], [id, {:input, input}, {:output, output}] ->
+        [id, {:input, input}, {:output, conflict_free_output(output, hp_output)}]
+
+      _, acc ->
+        acc
+    end)
+  end
+
+  defp merge_rules_by_same_output(%Table{rules: rules, hit_policy: :merge} = table) do
+    %{table | rules: do_merge_rules_by_same_output(rules)}
+  end
+
+  defp merge_rules_by_same_output(%Table{rules: rules, hit_policy: :reverse_merge} = table) do
+    %{
+      table
+      | rules:
+          rules
+          |> Enum.reverse()
+          |> do_merge_rules_by_same_output()
+          |> Enum.reverse()
+    }
+  end
+
+  defp merge_rules_by_same_output(%Table{} = table),
     do: table
 
-  defp do_merge_rules(rules) when is_list(rules) do
-    do_merge_rules(rules, [])
+  defp do_merge_rules_by_same_output(rules) when is_list(rules) do
+    merged = do_merge_rules_by_same_output(rules, [])
+
+    case do_merge_rules_by_same_output(merged, []) do
+      ^merged -> merged
+      acc -> do_merge_rules_by_same_output(acc)
+    end
   end
 
-  defp do_merge_rules([], acc), do: acc
+  defp do_merge_rules_by_same_output([], acc), do: acc
 
-  defp do_merge_rules([rule | rest], acc) do
-    do_merge_rules(rest, try_merge_in(acc, rule))
+  defp do_merge_rules_by_same_output([rule | rest], acc) do
+    do_merge_rules_by_same_output(rest, try_merge_inputs_by_same_output(acc, rule))
   end
 
-  defp try_merge_in([], rule) do
+  defp try_merge_inputs_by_same_output([], rule) do
     [rule]
   end
 
-  defp try_merge_in([head | tail], rule) do
+  defp try_merge_inputs_by_same_output([head | tail], rule) do
     cond do
-      mergeable?(head, rule) ->
-        [merge_two_rules(head, rule) | tail]
+      input_mergeable?(head, rule) ->
+        merge_inputs(head, rule) ++ tail
 
       :otherwise ->
-        [head | try_merge_in(tail, rule)]
+        [head | try_merge_inputs_by_same_output(tail, rule)]
     end
   end
 
   @doc """
-  Return true if rule2 can be merged into rule1
+  Return true if rule2's inputs can be merged into rule1's.
   """
-  def mergeable?(
+  def input_mergeable?(
         [_, {:input, input1}, {:output, output}],
         [_, {:input, input2}, {:output, output}]
       ),
-      do: input_mergeable?(input1, input2)
+      do: only_one_different_stub?(input1, input2)
 
-  def mergeable?(_, _), do: false
+  def input_mergeable?(_, _), do: false
 
-  defp input_mergeable?(input1, input2) do
+  defp only_one_different_stub?(input1, input2) do
     diff =
       Stream.zip(input1, input2)
       |> Stream.reject(fn
@@ -68,11 +154,11 @@ defmodule Tablex.Optimizer.MergeRules do
     diff == 1
   end
 
-  defp merge_two_rules(
+  defp merge_inputs(
          [id, {:input, input1}, {:output, output}],
          [_i, {:input, input2}, {:output, output}]
        ) do
-    [id, {:input, merge_input_stubs(input1, input2)}, {:output, output}]
+    [[id, {:input, merge_input_stubs(input1, input2)}, {:output, output}]]
   end
 
   defp merge_input_stubs(input1, input2) do
