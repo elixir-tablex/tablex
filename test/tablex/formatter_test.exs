@@ -174,6 +174,18 @@ defmodule Tablex.FormatterTest do
     end
   end
 
+  describe "Formatting ambitional strings" do
+    test "works" do
+      table =
+        Tablex.new("""
+        C || value
+        1 || "1983-04-01"
+        """)
+
+      assert_format(table)
+    end
+  end
+
   defp assert_format(table) do
     # table |> Formatter.to_s() |> IO.puts()
     assert table |> Formatter.to_s() |> Tablex.new() == fix_ids(table)
