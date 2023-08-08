@@ -34,10 +34,12 @@ defmodule Tablex.Formatter.Value do
   end
 
   defp maybe_quoted(str) do
-    if String.contains?(str, " ") do
-      inspect(str)
-    else
-      str
+    case Tablex.Parser.expr(str) do
+      {:ok, [^str], "", _, _, _} ->
+        str
+
+      _ ->
+        inspect(str)
     end
   end
 end
