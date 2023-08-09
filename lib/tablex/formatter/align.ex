@@ -7,11 +7,11 @@ defmodule Tablex.Formatter.Align do
 
       max_len =
         columns
-        |> Stream.map(&String.length/1)
+        |> Stream.map(&string_width/1)
         |> Enum.max()
 
       columns
-      |> Enum.map(&String.pad_trailing(&1, max_len))
+      |> Enum.map(&pad_trailing(&1, max_len))
     end)
     |> Stream.zip()
     |> Enum.map(fn line ->
@@ -20,5 +20,15 @@ defmodule Tablex.Formatter.Align do
       |> Enum.join(" ")
       |> String.trim_trailing()
     end)
+  end
+
+  defp string_width(str),
+    do: Ucwidth.width(str)
+
+  defp pad_trailing(str, max_len) do
+    case string_width(str) do
+      n when n > max_len -> str
+      n -> str <> String.duplicate(" ", max_len - n)
+    end
   end
 end
