@@ -13,6 +13,7 @@ defmodule Tablex.Formatter.Value do
     Enum.map_join(value, ",", &render_value/1)
   end
 
+  def render_value({:code, code}), do: "`#{code}`"
   def render_value(:any), do: "-"
   def render_value(true), do: "yes"
   def render_value(false), do: "no"
