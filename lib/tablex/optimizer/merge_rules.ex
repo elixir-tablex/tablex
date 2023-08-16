@@ -6,6 +6,10 @@ defmodule Tablex.Optimizer.MergeRules do
   alias Tablex.Table
   alias Tablex.Util.ListBreaker
 
+  @hp_first_hit :first_hit
+  @hp_merge :merge
+  @hp_reverse_merge :reverse_merge
+
   import Tablex.Optimizer.Helper,
     only: [
       fix_ids: 1,
@@ -37,13 +41,13 @@ defmodule Tablex.Optimizer.MergeRules do
   # to have only stubs that are not covered by the other rule. If all stubs after
   # the examination of the lower priority rule are covered by the other rule, then
   # the lower priority rule is removed directly.
-  defp merge_rules_by_same_input(%Table{rules: rules, hit_policy: :merge} = table) do
+  defp merge_rules_by_same_input(%Table{rules: rules, hit_policy: @hp_merge} = table) do
     # For tables with `:merge` hit policy, the higher priority the rule has, the
     # higher the prosition it is.
     %{table | rules: do_merge_rules_by_same_input(rules)}
   end
 
-  defp merge_rules_by_same_input(%Table{rules: rules, hit_policy: :reverse_merge} = table) do
+  defp merge_rules_by_same_input(%Table{rules: rules, hit_policy: @hp_reverse_merge} = table) do
     %{
       table
       | rules:
@@ -84,11 +88,12 @@ defmodule Tablex.Optimizer.MergeRules do
     end)
   end
 
-  defp merge_rules_by_same_output(%Table{rules: rules, hit_policy: :merge} = table) do
+  defp merge_rules_by_same_output(%Table{rules: rules, hit_policy: hp} = table)
+       when hp in [@hp_first_hit, @hp_merge] do
     %{table | rules: do_merge_rules_by_same_output(rules)}
   end
 
-  defp merge_rules_by_same_output(%Table{rules: rules, hit_policy: :reverse_merge} = table) do
+  defp merge_rules_by_same_output(%Table{rules: rules, hit_policy: @hp_reverse_merge} = table) do
     %{
       table
       | rules:
