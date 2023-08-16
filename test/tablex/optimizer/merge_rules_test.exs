@@ -117,5 +117,43 @@ defmodule MergeRules.MergeRulesTest do
                ]
              } = MergeRules.optimize(table)
     end
+
+    test "works with two dimentions" do
+      table =
+        Tablex.new("""
+        M x n || value
+        1 a 1 || T
+        2 b 1 || T
+        3 a 2 || T
+        4 b 2 || T
+        5 - - || F
+        """)
+
+      assert %{
+               rules: [
+                 [1, {:input, [["a", "b"], [1, 2]]}, {:output, [true]}],
+                 [2, {:input, [:any, :any]}, {:output, [false]}]
+               ]
+             } = MergeRules.optimize(table)
+    end
+
+    test "works with two dimentions and `first_hit`" do
+      table =
+        Tablex.new("""
+        F x n || value
+        1 a 1 || T
+        2 b 1 || T
+        3 a 2 || T
+        4 b 2 || T
+        5 - - || F
+        """)
+
+      assert %{
+               rules: [
+                 [1, {:input, [["a", "b"], [1, 2]]}, {:output, [true]}],
+                 [2, {:input, [:any, :any]}, {:output, [false]}]
+               ]
+             } = MergeRules.optimize(table)
+    end
   end
 end
