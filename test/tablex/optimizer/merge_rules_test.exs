@@ -155,5 +155,24 @@ defmodule MergeRules.MergeRulesTest do
                ]
              } = MergeRules.optimize(table)
     end
+
+    test "works with two dimentions and `first_hit`, when there's another rule between" do
+      table =
+        Tablex.new("""
+        F x n || value
+        1 a 1 || T
+        2 c 3 || test
+        3 b 1 || T
+        4 - - || F
+        """)
+
+      assert %{
+               rules: [
+                 [1, {:input, [["a", "b"], 1]}, {:output, [true]}],
+                 [2, {:input, ["c", 3]}, {:output, ["test"]}],
+                 [3, {:input, [:any, :any]}, {:output, [false]}]
+               ]
+             } = MergeRules.optimize(table)
+    end
   end
 end
