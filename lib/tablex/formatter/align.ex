@@ -22,7 +22,7 @@ defmodule Tablex.Formatter.Align do
     end)
   end
 
-  defp string_width(str),
+  defp string_width("" <> str),
     do: Ucwidth.width(str)
 
   defp pad_trailing(str, max_len) do

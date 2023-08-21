@@ -2,7 +2,6 @@ defmodule Tablex.Formatter.Horizontal do
   alias Tablex.Table
 
   import Tablex.Formatter.HitPolicy, only: [render_hit_policy: 1]
-  import Tablex.Formatter.Value, only: [render_value: 1]
   import Tablex.Formatter.Variable, only: [render_var_def: 2, render_var_desc: 1]
   import Tablex.Formatter.Align, only: [align_columns: 1]
 
@@ -70,5 +69,10 @@ defmodule Tablex.Formatter.Horizontal do
       Enum.map(output_values, &render_value/1)
     ]
     |> List.flatten()
+  end
+
+  defp render_value(value) do
+    Tablex.Formatter.Value.render_value(value)
+    |> IO.iodata_to_binary()
   end
 end
