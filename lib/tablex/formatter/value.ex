@@ -4,13 +4,9 @@ defmodule Tablex.Formatter.Value do
   @doc """
   Render a value into inspectable text.
   """
-  @spec render_value(any) :: String.t()
-  def render_value([value]) do
-    ["[", render_value(value), "]"] |> IO.iodata_to_binary()
-  end
-
-  def render_value([_ | _] = value) do
-    Enum.map_join(value, ",", &render_value/1)
+  @spec render_value(any) :: IO.iodata()
+  def render_value(value) when is_list(value) do
+    ["[", Stream.map(value, &render_value/1) |> Enum.intersperse(","), "]"]
   end
 
   def render_value({:code, code}), do: "`#{code}`"

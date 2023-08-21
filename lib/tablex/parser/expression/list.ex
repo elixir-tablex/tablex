@@ -17,10 +17,16 @@ defmodule Tablex.Parser.Expression.List do
         :explicit_list,
         string("[")
         |> concat(
-          choice([
-            parsec(:implied_list),
-            parsec(:list_item)
-          ])
+          concat(
+            parsec(:list_item),
+            repeat(
+              concat(
+                "," |> string() |> optional_space() |> ignore(),
+                parsec(:list_item)
+              )
+            )
+          )
+          |> wrap()
         )
         |> string("]")
         |> reduce({unquote(__MODULE__), :trans_list, []})
@@ -72,7 +78,5 @@ defmodule Tablex.Parser.Expression.List do
   end
 
   @doc false
-  def trans_list(["[", "]"]), do: []
-  def trans_list(["[", [passed], "]"]), do: [passed]
-  def trans_list(["[", passed, "]"]), do: List.wrap(passed)
+  def trans_list(["[", passed, "]"]), do: passed
 end
