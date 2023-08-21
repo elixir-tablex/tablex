@@ -2,6 +2,8 @@ defmodule RuleParser do
   import NimbleParsec
   import Tablex.Parser.Rule
 
+  use Tablex.Parser.Expression.List
+
   defparsec(:parse, rules(), [])
 end
 

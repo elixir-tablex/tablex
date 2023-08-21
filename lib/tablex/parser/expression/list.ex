@@ -1,67 +1,78 @@
 defmodule Tablex.Parser.Expression.List do
   @moduledoc false
 
-  import NimbleParsec
-  import Tablex.Parser.Expression.Range
-  import Tablex.Parser.Expression.Numeric
-  import Tablex.Parser.Expression.Bool
-  import Tablex.Parser.Expression.Comparison
-  import Tablex.Parser.Expression.QuotedString
-  import Tablex.Parser.Expression.ImpliedString
-  import Tablex.Parser.Expression.Null
-  import Tablex.Parser.Space
+  defmacro __using__(_) do
+    quote do
+      import NimbleParsec
+      import Tablex.Parser.Expression.Range
+      import Tablex.Parser.Expression.Numeric
+      import Tablex.Parser.Expression.Bool
+      import Tablex.Parser.Expression.Comparison
+      import Tablex.Parser.Expression.QuotedString
+      import Tablex.Parser.Expression.ImpliedString
+      import Tablex.Parser.Expression.Null
+      import Tablex.Parser.Space
 
-  def list do
-    choice([
-      empty_list(),
-      explicit_list(),
-      implied_list()
-    ])
-  end
-
-  def empty_list do
-    string("[]") |> replace([])
-  end
-
-  def explicit_list do
-    string("[")
-    |> concat(
-      choice([
-        implied_list(),
-        list_item()
-      ])
-    )
-    |> string("]")
-    |> reduce({__MODULE__, :trans_list, []})
-  end
-
-  def implied_list do
-    concat(
-      list_item(),
-      times(
-        concat(
-          "," |> string() |> optional_space() |> ignore(),
-          list_item()
-        ),
-        min: 1
+      defparsec(
+        :explicit_list,
+        string("[")
+        |> concat(
+          choice([
+            parsec(:implied_list),
+            parsec(:list_item)
+          ])
+        )
+        |> string("]")
+        |> reduce({unquote(__MODULE__), :trans_list, []})
       )
-    )
-    |> wrap()
-  end
 
-  def list_item do
-    choice([
-      range(),
-      comparison(),
-      numeric(),
-      bool(),
-      null(),
-      quoted_string(),
-      implied_string()
-    ])
+      defparsec(
+        :implied_list,
+        concat(
+          parsec(:list_item),
+          times(
+            concat(
+              "," |> string() |> optional_space() |> ignore(),
+              parsec(:list_item)
+            ),
+            min: 1
+          )
+        )
+        |> wrap()
+      )
+
+      defparsec(
+        :list_item,
+        choice([
+          parsec(:explicit_list),
+          range(),
+          comparison(),
+          numeric(),
+          bool(),
+          null(),
+          quoted_string(),
+          implied_string()
+        ])
+      )
+
+      defparsec(
+        :list,
+        choice([
+          parsec(:empty_list),
+          parsec(:explicit_list),
+          parsec(:implied_list)
+        ])
+      )
+
+      defparsec(
+        :empty_list,
+        string("[]") |> replace([])
+      )
+    end
   end
 
   @doc false
   def trans_list(["[", "]"]), do: []
+  def trans_list(["[", [passed], "]"]), do: [passed]
   def trans_list(["[", passed, "]"]), do: List.wrap(passed)
 end
