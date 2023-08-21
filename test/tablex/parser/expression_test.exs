@@ -2,6 +2,8 @@ defmodule ExpressionParser do
   import NimbleParsec
   import Tablex.Parser.Expression
 
+  use Tablex.Parser.Expression.List
+
   defparsec(:parse, expression(), [])
 end
 
@@ -111,6 +113,10 @@ defmodule Tablex.Parser.ExpressionTest do
     test "works with multi-element lists" do
       assert_parse("[1, 2]", [1, 2])
       assert_parse("[foo,bar]", ["foo", "bar"])
+    end
+
+    test "works with nested lists" do
+      assert_parse("[[1, 2], [3, 4]]", [[1, 2], [3, 4]])
     end
   end
 

@@ -13,6 +13,8 @@ defmodule Tablex.Parser do
   """
   alias Tablex.Table
 
+  use Tablex.Parser.Expression.List
+
   require Logger
 
   import NimbleParsec

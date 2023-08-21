@@ -1,12 +1,13 @@
 defmodule Tablex.Parser.Expression do
   @moduledoc false
 
+  use Tablex.Parser.Expression.List
+
   import NimbleParsec
 
   import Tablex.Parser.Expression.Any
   import Tablex.Parser.Expression.Numeric
   import Tablex.Parser.Expression.Range
-  import Tablex.Parser.Expression.List
   import Tablex.Parser.Expression.Bool
   import Tablex.Parser.Expression.ImpliedString
   import Tablex.Parser.Expression.QuotedString
@@ -15,7 +16,7 @@ defmodule Tablex.Parser.Expression do
 
   def expression do
     choice([
-      list(),
+      parsec(:list),
       any(),
       range(),
       numeric(),
