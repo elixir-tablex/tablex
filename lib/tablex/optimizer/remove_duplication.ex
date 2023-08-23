@@ -7,8 +7,8 @@ defmodule Tablex.Optimizer.RemoveDuplication do
 
   import Tablex.Optimizer.Helper,
     only: [
-      order_by_priority_high_to_lower: 2,
-      order_by_hit_policy: 3,
+      order_by_priority: 3,
+      sort_rules: 2,
       fix_ids: 1
     ]
 
@@ -25,9 +25,9 @@ defmodule Tablex.Optimizer.RemoveDuplication do
 
   defp remove_duplicated_rules(rules, hit_policy) do
     rules
-    |> order_by_priority_high_to_lower(hit_policy)
+    |> order_by_priority(:h2l, hit_policy)
     |> do_remove_same_rules({MapSet.new(), []})
-    |> order_by_hit_policy(:l2h, hit_policy)
+    |> sort_rules(hit_policy)
     |> fix_ids()
   end
 

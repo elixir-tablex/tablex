@@ -5,28 +5,41 @@ defmodule Tablex.Optimizer.Helper do
   @doc """
   Order a list of table rules by priority, high to low.
   """
-  def order_by_priority_high_to_lower(rules, :reverse_merge),
-    do: Enum.reverse(rules)
-
-  def order_by_priority_high_to_lower(rules, _),
-    do: rules
+  def order_by_priority_high_to_lower(rules, hp),
+    do: order_by_priority(rules, :h2l, hp)
 
   @doc """
   Order an already sorted, list of rules by hit policy.
   """
-  @spec order_by_hit_policy([rule()], current_order :: order(), Tablex.HitPolicy.hit_policy()) ::
+  @spec order_by_priority([rule()], current_order :: order(), Tablex.HitPolicy.hit_policy()) ::
           [rule()]
-  def order_by_hit_policy(rules, :h2l, :reverse_merge),
-    do: rules |> Enum.reverse()
+  def order_by_priority(rules, :h2l, :reverse_merge),
+    do: rules |> Enum.sort_by(fn_reverse_orders())
 
-  def order_by_hit_policy(rules, :h2l, _),
-    do: rules
+  def order_by_priority(rules, :h2l, _),
+    do: rules |> Enum.sort_by(fn_keep_orders())
 
-  def order_by_hit_policy(rules, :l2h, :reverse_merge),
-    do: rules
+  def order_by_priority(rules, :l2h, :reverse_merge),
+    do: rules |> Enum.sort_by(fn_keep_orders())
 
-  def order_by_hit_policy(rules, :l2h, _),
-    do: Enum.reverse(rules)
+  def order_by_priority(rules, :l2h, _),
+    do: rules |> Enum.sort_by(fn_reverse_orders())
+
+  defp fn_keep_orders, do: fn [n | _] -> n end
+  defp fn_reverse_orders, do: fn [n | _] -> -n end
+
+  @doc """
+  Sort the rules according to a hit policy.
+  """
+  def sort_rules(rules, hit_policy) do
+    sorting =
+      case hit_policy do
+        :reverse_merge -> :l2h
+        _ -> :h2l
+      end
+
+    order_by_priority(rules, sorting, hit_policy)
+  end
 
   @doc """
   Fix ids of rules.
@@ -40,12 +53,12 @@ defmodule Tablex.Optimizer.Helper do
   @doc """
   Check if a input condition covers by another.
   """
-  @spec covers?(covering :: any(), target :: any()) :: boolean()
-  def covers?(input, input) do
+  @spec cover_input?(covering :: any(), target :: any()) :: boolean()
+  def cover_input?(input, input) do
     true
   end
 
-  def covers?(existing_input, input) do
+  def cover_input?(existing_input, input) do
     Stream.zip(existing_input, input)
     |> Enum.all?(fn {existing, new} -> stub_covers?(existing, new) end)
   end
@@ -78,22 +91,43 @@ defmodule Tablex.Optimizer.Helper do
   def stub_covers?(_, _),
     do: false
 
+  def cover_output?(output, output) do
+    true
+  end
+
+  def cover_output?(high_output, low_output) do
+    Stream.zip(high_output, low_output)
+    |> Enum.all?(fn
+      {:any, :any} ->
+        true
+
+      {:any, _} ->
+        false
+
+      _ ->
+        true
+    end)
+  end
+
   @doc """
-  Remove all already-existing stubs in an output.
+  Merge two outputs. Stub value with higher priority wins.
 
   ## Example
 
-    iex> conflict_free_output([1, 2, 3], [2, 4, 6])
-    [:any, :any, :any]
+  iex > merge_outputs([1, 2, 3], [2, 4, 6])
+  [1, 2, 3]
 
-    iex> conflict_free_output([1, 2, 3], [2, :any, 6])
-    [:any, 2, :any]
+  iex > merge_outputs([:any, 2, :any], [2, :any, 6])
+  [2, 2, 6]
   """
-  def conflict_free_output(output, existing_output) do
-    Stream.zip(output, existing_output)
+  def merge_outputs(high_output, low_output) do
+    Stream.zip(high_output, low_output)
     |> Enum.map(fn
-      {stub, :any} -> stub
-      _ -> :any
+      {:any, stub} ->
+        stub
+
+      {stub, _} ->
+        stub
     end)
   end
 
@@ -101,7 +135,26 @@ defmodule Tablex.Optimizer.Helper do
   Check if an output is meaningful. A meaningful output is one that
   does not contain all :any elements.
   """
+
   def meaningful_output?(output) do
     output |> Enum.any?(&(&1 != :any))
+  end
+
+  def exclusive?([_, {:input, input1} | _], [_, {:input, input2} | _]) do
+    exclusive?(input1, input2)
+  end
+
+  def exclusive?(input1, input2) do
+    Stream.zip(input1, input2)
+    |> Enum.any?(fn
+      # `a` and `b` are both specified (not `:any`) and they are
+      # different, which means these two rules will never be both
+      # hit by the same context.
+      {a, b} when a != b and a != :any and b != :any ->
+        true
+
+      _ ->
+        false
+    end)
   end
 end

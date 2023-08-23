@@ -13,8 +13,10 @@ defmodule Tablex.Optimizer.MergeRules do
   import Tablex.Optimizer.Helper,
     only: [
       fix_ids: 1,
-      conflict_free_output: 2,
-      meaningful_output?: 1
+      merge_outputs: 2,
+      exclusive?: 2,
+      order_by_priority_high_to_lower: 2,
+      sort_rules: 2
     ]
 
   def optimize(%Table{} = table) do
@@ -44,7 +46,13 @@ defmodule Tablex.Optimizer.MergeRules do
   defp merge_rules_by_same_input(%Table{rules: rules, hit_policy: @hp_merge} = table) do
     # For tables with `:merge` hit policy, the higher priority the rule has, the
     # higher the prosition it is.
-    %{table | rules: do_merge_rules_by_same_input(rules)}
+    %{
+      table
+      | rules:
+          rules
+          |> order_by_priority_high_to_lower(@hp_merge)
+          |> do_merge_rules_by_same_input()
+    }
   end
 
   defp merge_rules_by_same_input(%Table{rules: rules, hit_policy: @hp_reverse_merge} = table) do
@@ -52,9 +60,9 @@ defmodule Tablex.Optimizer.MergeRules do
       table
       | rules:
           rules
-          |> Enum.reverse()
+          |> order_by_priority_high_to_lower(@hp_reverse_merge)
           |> do_merge_rules_by_same_input()
-          |> Enum.reverse()
+          |> sort_rules(@hp_reverse_merge)
     }
   end
 
@@ -64,28 +72,32 @@ defmodule Tablex.Optimizer.MergeRules do
 
   defp do_merge_rules_by_same_input(rules) when is_list(rules) do
     do_merge_rules_by_same_input(rules, [])
-    |> Stream.filter(fn [_, _, {:output, output}] ->
-      meaningful_output?(output)
-    end)
+  end
+
+  defp do_merge_rules_by_same_input([], merged) do
+    merged
+  end
+
+  defp do_merge_rules_by_same_input([rule | rest], merged) do
+    do_merge_rules_by_same_input(rest, merge_into(rule, merged))
     |> Enum.reverse()
   end
 
-  defp do_merge_rules_by_same_input([], acc), do: acc
-
-  defp do_merge_rules_by_same_input([head | rest], higher_priority_rules) do
-    do_merge_rules_by_same_input(rest, [
-      try_merge_output_in(higher_priority_rules, head) | higher_priority_rules
-    ])
+  defp merge_into(rule, []) do
+    [rule]
   end
 
-  defp try_merge_output_in(higher_priority_rules, rule) do
-    Enum.reduce(higher_priority_rules, rule, fn
-      [_, {:input, input}, {:output, hp_output}], [id, {:input, input}, {:output, output}] ->
-        [id, {:input, input}, {:output, conflict_free_output(output, hp_output)}]
+  defp merge_into(
+         [n, {:input, input}, {:output, low_output}],
+         [[_, {:input, input}, {:output, high_output}] | rest]
+       ) do
+    [[n, {:input, input}, {:output, merge_outputs(low_output, high_output)}] | rest]
+  end
 
-      _, acc ->
-        acc
-    end)
+  defp merge_into(rule, [head | rest]) do
+    if exclusive?(head, rule),
+      do: [head | merge_into(rule, rest)],
+      else: [rule, head | rest]
   end
 
   defp merge_rules_by_same_output(%Table{rules: rules, hit_policy: hp} = table)
@@ -98,9 +110,9 @@ defmodule Tablex.Optimizer.MergeRules do
       table
       | rules:
           rules
-          |> Enum.reverse()
+          |> order_by_priority_high_to_lower(@hp_reverse_merge)
           |> do_merge_rules_by_same_output()
-          |> Enum.reverse()
+          |> sort_rules(@hp_reverse_merge)
     }
   end
 
