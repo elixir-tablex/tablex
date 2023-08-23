@@ -128,9 +128,7 @@ defmodule Tablex.Decider do
     |> Stream.filter(fn {condition, _} ->
       match_rule?(condition, context)
     end)
-    |> Stream.map(fn {_condition, outputs} ->
-      outputs
-    end)
+    |> Stream.map(fn {_condition, outputs} -> outputs end)
     |> Enum.reduce_while(empty, &merge_if_containing_undf/2)
     |> flatten_path()
   end
