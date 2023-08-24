@@ -157,4 +157,47 @@ defmodule Tablex.Optimizer.Helper do
         false
     end)
   end
+
+  def input_mergeable?(input1, input2) do
+    cover_input?(input1, input2) or cover_input?(input2, input1) or
+      only_one_different_stub?(input1, input2)
+  end
+
+  defp only_one_different_stub?(input1, input2) do
+    diff =
+      Stream.zip(input1, input2)
+      |> Stream.reject(fn
+        {same, same} -> true
+        _ -> false
+      end)
+      |> Enum.count()
+
+    diff == 1
+  end
+
+  @doc """
+  Merge two inputs.
+  """
+  def merge_inputs(input1, input2) do
+    Stream.zip(input1, input2)
+    |> Enum.map(fn {a, b} -> merge_input_stubs(a, b) end)
+  end
+
+  @doc """
+  Merge two input stubs
+  """
+  def merge_input_stubs(expr, expr), do: expr
+
+  def merge_input_stubs(expr1, expr2) do
+    cond do
+      stub_covers?(expr1, expr2) ->
+        expr1
+
+      stub_covers?(expr2, expr1) ->
+        expr2
+
+      true ->
+        List.flatten([expr1, expr2]) |> Enum.uniq() |> Enum.sort()
+    end
+  end
 end

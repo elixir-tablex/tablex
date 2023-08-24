@@ -29,8 +29,8 @@ defmodule MergeRules.MergeRulesTest do
 
       assert %{
                rules: [
-                 [1, {:input, [[1, 2, 3]]}, {:output, [true, true]}],
-                 [2, {:input, [4]}, {:output, [false, true]}]
+                 [1, {:input, [4]}, {:output, [false, true]}],
+                 [2, {:input, [[1, 2, 3]]}, {:output, [true, true]}]
                ]
              } = MergeRules.optimize(table)
     end
@@ -46,8 +46,8 @@ defmodule MergeRules.MergeRulesTest do
 
       assert %{
                rules: [
-                 [1, {:input, [4]}, {:output, [false, true]}],
-                 [2, {:input, [[1, 2, 3]]}, {:output, [true, true]}]
+                 [1, {:input, [[1, 2, 3]]}, {:output, [true, true]}],
+                 [2, {:input, [4]}, {:output, [false, true]}]
                ]
              } = MergeRules.optimize(table)
     end
@@ -78,8 +78,8 @@ defmodule MergeRules.MergeRulesTest do
 
       assert %{
                rules: [
-                 [1, {:input, [[2, 3], ["bar", "foo"]]}, {:output, [:any, true]}],
-                 [2, {:input, [4, :any]}, {:output, [false, true]}]
+                 [1, {:input, [4, :any]}, {:output, [false, true]}],
+                 [2, {:input, [[2, 3], ["bar", "foo"]]}, {:output, [:any, true]}]
                ]
              } = MergeRules.optimize(table)
     end
@@ -95,8 +95,8 @@ defmodule MergeRules.MergeRulesTest do
 
       assert %{
                rules: [
-                 [1, {:input, [[2, 3], ["bar", "foo"]]}, {:output, [false, true]}],
-                 [2, {:input, [4, :any]}, {:output, [false, true]}]
+                 [1, {:input, [4, :any]}, {:output, [false, true]}],
+                 [2, {:input, [[2, 3], ["bar", "foo"]]}, {:output, [false, true]}]
                ]
              } = MergeRules.optimize(table)
     end
@@ -112,8 +112,8 @@ defmodule MergeRules.MergeRulesTest do
 
       assert %{
                rules: [
-                 [1, {:input, [4, :any]}, {:output, [false, true]}],
-                 [2, {:input, [[2, 3], ["bar", "foo"]]}, {:output, [false, true]}]
+                 [1, {:input, [[2, 3], ["bar", "foo"]]}, {:output, [false, true]}],
+                 [2, {:input, [4, :any]}, {:output, [false, true]}]
                ]
              } = MergeRules.optimize(table)
     end
@@ -168,9 +168,31 @@ defmodule MergeRules.MergeRulesTest do
 
       assert %{
                rules: [
-                 [1, {:input, [["a", "b"], 1]}, {:output, [true]}],
-                 [2, {:input, ["c", 3]}, {:output, ["test"]}],
+                 [1, {:input, ["c", 3]}, {:output, ["test"]}],
+                 [2, {:input, [["a", "b"], 1]}, {:output, [true]}],
                  [3, {:input, [:any, :any]}, {:output, [false]}]
+               ]
+             } = MergeRules.optimize(table)
+    end
+
+    test "should not merge two rules where there are other co-existing rules between" do
+      table =
+        Tablex.new("""
+        F foo   bar || x
+        1 false 1  || 1
+        2 false -  || 2
+        3 true  -  || 3
+        4 -     -  || 2
+        """)
+
+      assert %{x: 3} == Tablex.decide(table, foo: true)
+      assert %{x: 3} == table |> MergeRules.optimize() |> Tablex.decide(foo: true)
+
+      assert %{
+               rules: [
+                 [1, {:input, [false, 1]}, {:output, [1]}],
+                 [2, {:input, [true, :any]}, {:output, [3]}],
+                 [3, {:input, [:any, :any]}, {:output, [2]}]
                ]
              } = MergeRules.optimize(table)
     end
