@@ -14,6 +14,8 @@ defmodule Tablex.Optimizer.MergeRules do
     only: [
       fix_ids: 1,
       merge_outputs: 2,
+      merge_inputs: 2,
+      input_mergeable?: 2,
       exclusive?: 2,
       order_by_priority_high_to_lower: 2,
       sort_rules: 2
@@ -79,41 +81,36 @@ defmodule Tablex.Optimizer.MergeRules do
   end
 
   defp do_merge_rules_by_same_input([rule | rest], merged) do
-    do_merge_rules_by_same_input(rest, merge_into(rule, merged))
+    do_merge_rules_by_same_input(rest, try_merge_input(rule, merged))
     |> Enum.reverse()
   end
 
-  defp merge_into(rule, []) do
+  defp try_merge_input(rule, []) do
     [rule]
   end
 
-  defp merge_into(
+  defp try_merge_input(
          [n, {:input, input}, {:output, low_output}],
          [[_, {:input, input}, {:output, high_output}] | rest]
        ) do
     [[n, {:input, input}, {:output, merge_outputs(high_output, low_output)}] | rest]
   end
 
-  defp merge_into(rule, [head | rest]) do
+  defp try_merge_input(rule, [head | rest]) do
     if exclusive?(head, rule),
-      do: [head | merge_into(rule, rest)],
+      do: [head | try_merge_input(rule, rest)],
       else: [rule, head | rest]
   end
 
   defp merge_rules_by_same_output(%Table{rules: rules, hit_policy: hp} = table)
-       when hp in [@hp_first_hit, @hp_merge] do
-    %{table | rules: do_merge_rules_by_same_output(rules)}
-  end
+       when hp in [@hp_first_hit, @hp_merge, @hp_reverse_merge] do
+    rules =
+      rules
+      |> order_by_priority_high_to_lower(hp)
+      |> do_merge_rules_by_same_output()
+      |> sort_rules(hp)
 
-  defp merge_rules_by_same_output(%Table{rules: rules, hit_policy: @hp_reverse_merge} = table) do
-    %{
-      table
-      | rules:
-          rules
-          |> order_by_priority_high_to_lower(@hp_reverse_merge)
-          |> do_merge_rules_by_same_output()
-          |> sort_rules(@hp_reverse_merge)
-    }
+    %{table | rules: rules}
   end
 
   defp merge_rules_by_same_output(%Table{} = table),
@@ -124,65 +121,42 @@ defmodule Tablex.Optimizer.MergeRules do
 
     case do_merge_rules_by_same_output(merged, []) do
       ^merged -> merged
-      acc -> do_merge_rules_by_same_output(acc)
+      acc -> do_merge_rules_by_same_output(acc, [])
     end
   end
 
   defp do_merge_rules_by_same_output([], acc), do: acc
 
   defp do_merge_rules_by_same_output([rule | rest], acc) do
-    do_merge_rules_by_same_output(rest, try_merge_inputs_by_same_output(acc, rule))
+    do_merge_rules_by_same_output(rest, try_merge_output(rule, acc))
   end
 
-  defp try_merge_inputs_by_same_output([], rule) do
+  defp try_merge_output(rule, []) do
     [rule]
   end
 
-  defp try_merge_inputs_by_same_output([head | tail], rule) do
+  defp try_merge_output(
+         [n, {:input, low_input}, {:output, same_output}] = r1,
+         [[_, {:input, high_input}, {:output, same_output}] = r2 | rest]
+       ) do
     cond do
-      input_mergeable?(head, rule) ->
-        merge_inputs(head, rule) ++ tail
+      input_mergeable?(low_input, high_input) ->
+        [
+          [n, {:input, merge_inputs(low_input, high_input)}, {:output, same_output}]
+          | rest
+        ]
+
+      exclusive?(r1, r2) ->
+        [r2 | try_merge_output(r1, rest)]
 
       :otherwise ->
-        [head | try_merge_inputs_by_same_output(tail, rule)]
+        [r2, r1 | rest]
     end
   end
 
-  @doc """
-  Return true if rule2's inputs can be merged into rule1's.
-  """
-  def input_mergeable?(
-        [_, {:input, input1}, {:output, output}],
-        [_, {:input, input2}, {:output, output}]
-      ),
-      do: only_one_different_stub?(input1, input2)
-
-  def input_mergeable?(_, _), do: false
-
-  defp only_one_different_stub?(input1, input2) do
-    diff =
-      Stream.zip(input1, input2)
-      |> Stream.reject(fn
-        {same, same} -> true
-        _ -> false
-      end)
-      |> Enum.count()
-
-    diff == 1
-  end
-
-  defp merge_inputs(
-         [id, {:input, input1}, {:output, output}],
-         [_i, {:input, input2}, {:output, output}]
-       ) do
-    [[id, {:input, merge_input_stubs(input1, input2)}, {:output, output}]]
-  end
-
-  defp merge_input_stubs(input1, input2) do
-    Stream.zip(input1, input2)
-    |> Enum.map(fn
-      {expr, expr} -> expr
-      {expr1, expr2} -> List.flatten([expr1, expr2]) |> Enum.sort()
-    end)
+  defp try_merge_output(rule, [head | rest]) do
+    if exclusive?(head, rule),
+      do: [head | try_merge_output(rule, rest)],
+      else: [rule, head | rest]
   end
 end
