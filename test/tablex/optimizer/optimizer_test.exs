@@ -24,7 +24,7 @@ defmodule Tablex.OptimizerTest do
         target.store_id   || 2053 2053 -
         ====
         feature1          || -    yes  no
-        feature2          || -    yes  no
+        feature2          || yes  no   no
         feature3          || no   -   yes
         feature4.enabled  || -    yes  no
         feature4.km       || -    0.3  10000
