@@ -91,7 +91,7 @@ defmodule Tablex.Optimizer.MergeRules do
          [n, {:input, input}, {:output, low_output}],
          [[_, {:input, input}, {:output, high_output}] | rest]
        ) do
-    [[n, {:input, input}, {:output, merge_outputs(low_output, high_output)}] | rest]
+    [[n, {:input, input}, {:output, merge_outputs(high_output, low_output)}] | rest]
   end
 
   defp merge_into(rule, [head | rest]) do
