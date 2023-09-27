@@ -85,8 +85,6 @@ defmodule Tablex.CodeGenerate do
       #{rule_clauses(table) |> Enum.join("\n")}
     end
     """
-    |> Code.format_string!()
-    |> IO.iodata_to_binary()
   end
 
   def generate(%Table{hit_policy: :collect, rules: rules, inputs: [], outputs: out_def}) do
