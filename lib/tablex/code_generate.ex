@@ -79,12 +79,13 @@ defmodule Tablex.CodeGenerate do
   end
 
   def generate(%Table{hit_policy: :first_hit} = table) do
-    """
-    binding = 
-    case {#{top_input_tuple_expr(table)}} do
-      #{rule_clauses(table) |> Enum.join("\n")}
-    end
-    """
+    [
+      "binding =\n",
+      ["  case {", top_input_tuple_expr(table), "} do\n"],
+      rule_clauses(table) |> Enum.intersperse("\n"),
+      "\nend"
+    ]
+    |> IO.iodata_to_binary()
   end
 
   def generate(%Table{hit_policy: :collect, rules: rules, inputs: [], outputs: out_def}) do
@@ -96,46 +97,61 @@ defmodule Tablex.CodeGenerate do
       |> Enum.intersperse(", ")
 
     code = [?[ | outputs] ++ [?]]
-    code |> IO.iodata_to_binary() |> Code.format_string!() |> IO.iodata_to_binary()
+    code |> IO.iodata_to_binary()
   end
 
   def generate(%Table{hit_policy: :collect, inputs: in_def} = table) do
     rule_functions =
       table.rules
-      |> expand_rules()
-      |> Enum.map(fn [_, {:input, inputs}, {:output, outputs}] ->
-        """
-        if(match?(#{rule_cond(inputs, in_def)}, {#{top_input_tuple_expr(table)}}),
-          do: #{to_output(outputs, table.outputs)}
-        )
-        """
-        |> String.trim_trailing()
+      |> Enum.map_intersperse(",\n", fn [_, {:input, inputs}, {:output, outputs}] ->
+        [
+          "if(match?(",
+          rule_cond(inputs, in_def),
+          ", {",
+          top_input_tuple_expr(table),
+          "}), do: ",
+          to_output(outputs, table.outputs),
+          ?)
+        ]
       end)
 
-    """
-    for ret when not is_nil(ret) <- [
-      #{rule_functions |> Enum.join(",\n")}
-    ], do: ret
-    """
+    ["for ret when not is_nil(ret) <- [", rule_functions, "], do: ret"]
+    |> IO.iodata_to_binary()
   end
 
   def generate(%Table{hit_policy: :merge} = table) do
     empty = table.outputs |> Enum.map(fn _ -> :any end)
 
-    """
-    binding = {#{top_input_tuple_expr(table)}}
+    clauses =
+      table.rules
+      |> Enum.map_intersperse(", ", fn
+        [_, {:input, rule_inputs}, {:output, rule_outputs} | _] ->
+          [
+            "fn\n",
+            [
+              "  ",
+              rule_cond(rule_inputs, table.inputs),
+              " -> ",
+              rule_output_values(rule_outputs),
+              "\n"
+            ],
+            "  _ -> nil\n",
+            "end"
+          ]
+      end)
 
-    out_values =
-      [#{table.rules |> expand_rules() |> Stream.map(fn [_, {:input, rule_inputs}, {:output, rule_outputs} | _] -> """
-      fn
-        #{rule_cond(rule_inputs, table.inputs)} ->
-          #{rule_output_values(rule_outputs)}
-
-        _ ->
-          nil
-      end
-      """ |> String.trim_trailing() end) |> Enum.join(",\n")}]
-      |> Enum.reduce_while(#{inspect(empty)}, fn rule_fn, acc ->
+    [
+      "binding = {",
+      top_input_tuple_expr(table),
+      ?},
+      ?\n,
+      "out_values = [",
+      clauses,
+      "]\n",
+      "|> Enum.reduce_while(",
+      inspect(empty),
+      """
+      , fn rule_fn, acc ->
         case rule_fn.(binding) do
           output when is_list(output) ->
             {acc, []} =
@@ -161,13 +177,14 @@ defmodule Tablex.CodeGenerate do
             {:cont, acc}
         end
       end)
-
-    #{@flatten_path}
-
-    Stream.zip([#{output_pathes(table.outputs) |> Enum.join(", ")}], out_values)
-    |> flatten_path.()
-    """
-    |> Code.format_string!()
+      """,
+      @flatten_path,
+      "\n",
+      "Stream.zip([",
+      output_pathes(table.outputs) |> Enum.intersperse(", "),
+      "], out_values)\n",
+      "|> flatten_path.()"
+    ]
     |> IO.iodata_to_binary()
   end
 
@@ -183,42 +200,18 @@ defmodule Tablex.CodeGenerate do
   end
 
   defp top_input_tuple_expr(%{inputs: inputs}) do
-    Enum.map_join(inputs, ", ", fn %{name: var, path: path} ->
+    Enum.map_intersperse(inputs, ", ", fn %{name: var, path: path} ->
       (path ++ [var]) |> hd() |> to_string()
     end)
   end
 
   defp rule_clauses(%{rules: rules, inputs: in_def, outputs: out_def}) do
     rules
-    |> expand_rules()
     |> Stream.map(&rule_clause(&1, in_def, out_def))
   end
 
-  defp expand_rules(rules) do
-    rules |> Stream.flat_map(&expand_rule/1)
-  end
-
-  defp expand_rule([_n, {:input, []} | _] = rule) do
-    [rule]
-  end
-
-  defp expand_rule([n, {:input, [input | rest]} | output]) when is_list(input) do
-    for elem <- input, r <- expand_rule([n, {:input, [elem | rest]} | output]) do
-      r
-    end
-  end
-
-  defp expand_rule([n, {:input, [input | rest]} | output]) do
-    for [^n, {:input, inputs} | ^output] <- expand_rule([n, {:input, rest} | output]) do
-      [n, {:input, [input | inputs]} | output]
-    end
-  end
-
   defp rule_clause([_n, input: inputs, output: outputs], in_def, out_def) do
-    """
-    #{rule_cond(inputs, in_def)} ->
-      #{to_output(outputs, out_def)}
-    """
+    [rule_cond(inputs, in_def), " ->\n  ", to_output(outputs, out_def)]
   end
 
   defp rule_cond(inputs, in_def) do
@@ -237,12 +230,13 @@ defmodule Tablex.CodeGenerate do
 
     case {patterns, guards} do
       {_, []} ->
-        "{#{patterns |> Enum.reverse() |> Enum.join(", ")}}"
+        ["{", patterns |> Enum.reverse() |> Enum.intersperse(", "), "}"]
 
       _ ->
-        p = "{#{patterns |> Enum.reverse() |> Enum.join(", ")}}"
-        w = guards |> Enum.join(" and ")
-        p <> " when " <> w
+        p = ["{", patterns |> Enum.reverse() |> Enum.intersperse(", "), "}"]
+        w = guards |> Enum.intersperse(" and ")
+
+        [p, " when ", w]
     end
   end
 
@@ -251,23 +245,61 @@ defmodule Tablex.CodeGenerate do
   defp pattern_guard({comp, number}, %{name: name, path: path}) when comp in ~w[!= < <= >= >]a do
     var_name = Enum.join(path ++ [name], "_")
 
-    {var_name, "is_number(#{var_name}) and #{var_name} #{comp} #{number}"}
+    {var_name,
+     ["is_number(", var_name, ") and ", var_name, " ", to_string(comp), " ", to_string(number)]}
   end
 
   defp pattern_guard(%Range{first: first, last: last}, %{name: name, path: path}) do
     var_name = Enum.join(path ++ [name], "_")
 
-    {var_name, "#{var_name} in #{first}..#{last}"}
+    {var_name, [var_name, " in ", "#{first}..#{last}"]}
   end
 
-  defp pattern_guard(list, %{name: name, path: path}) when is_list(list) do
+  defp pattern_guard(list, %{name: name, path: path} = var) when is_list(list) do
     var_name = Enum.join(path ++ [name], "_")
 
-    {var_name, "#{var_name} in #{inspect(list)}"}
+    case Enum.split_with(list, &is_literal/1) do
+      {[], complex_values} ->
+        join_pattern_guard(var_name, complex_values, var)
+
+      {literal_values, []} ->
+        {var_name, join_literal_pattern_guard(var_name, literal_values)}
+
+      {literal_values, complex_values} ->
+        {^var_name, complex_pattern} = join_pattern_guard(var_name, complex_values, var)
+
+        {
+          var_name,
+          [join_literal_pattern_guard(var_name, literal_values), " or ", complex_pattern]
+        }
+    end
   end
 
   defp pattern_guard(literal, _) when is_literal(literal) do
     inspect(literal)
+  end
+
+  defp join_literal_pattern_guard(var_name, [v]) do
+    [var_name, " == ", inspect(v)]
+  end
+
+  defp join_literal_pattern_guard(var_name, list) do
+    [var_name, " in ", inspect(list, charlists: :as_lists)]
+  end
+
+  defp join_pattern_guard(var_name, list, %{name: name, path: path}) when is_list(list) do
+    guard =
+      list
+      |> Stream.map(&pattern_guard(&1, %{name: name, path: path}))
+      |> Enum.map_intersperse(" or ", fn
+        {_var, guard} ->
+          guard
+
+        value when is_binary(value) ->
+          [var_name, " == ", value]
+      end)
+
+    {var_name, ["(", guard, ")"]}
   end
 
   defp to_output(outputs, out_def) do
