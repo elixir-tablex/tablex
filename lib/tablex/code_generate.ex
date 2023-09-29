@@ -149,7 +149,7 @@ defmodule Tablex.CodeGenerate do
       clauses,
       "]\n",
       "|> Enum.reduce_while(",
-      inspect(empty),
+      i(empty),
       """
       , fn rule_fn, acc ->
         case rule_fn.(binding) do
@@ -276,15 +276,15 @@ defmodule Tablex.CodeGenerate do
   end
 
   defp pattern_guard(literal, _) when is_literal(literal) do
-    inspect(literal)
+    i(literal)
   end
 
   defp join_literal_pattern_guard(var_name, [v]) do
-    [var_name, " == ", inspect(v)]
+    [var_name, " == ", i(v)]
   end
 
   defp join_literal_pattern_guard(var_name, list) do
-    [var_name, " in ", inspect(list, charlists: :as_lists)]
+    [var_name, " in ", i(list)]
   end
 
   defp join_pattern_guard(var_name, list, %{name: name, path: path}) when is_list(list) do
@@ -328,7 +328,7 @@ defmodule Tablex.CodeGenerate do
   end
 
   defp to_code(v) do
-    inspect(v)
+    i(v)
   end
 
   defp rule_output_values(outputs) do
@@ -342,7 +342,7 @@ defmodule Tablex.CodeGenerate do
   end
 
   defp output_pathes(outputs) do
-    for %{name: name, path: path} <- outputs, do: inspect(path ++ [name])
+    for %{name: name, path: path} <- outputs, do: i(path ++ [name])
   end
 
   defp to_nested_pattern("_", _) do
@@ -353,5 +353,9 @@ defmodule Tablex.CodeGenerate do
     %{tl(path ++ [name]) => {:code, flat_pattern}}
     |> DeepMap.flatten()
     |> to_code()
+  end
+
+  defp i(v) do
+    inspect(v, limit: :infinity, char_lists: :as_lists)
   end
 end
