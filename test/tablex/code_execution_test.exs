@@ -54,6 +54,20 @@ defmodule Tablex.CodeExecutionTest do
       assert %{go_to_library: true, volunteer: false, blogging: true} ==
                run(table, day_of_week: 1, week_of_month: 4)
     end
+
+    test "works with `reverse_merge` hit policy" do
+      store_ids = 1..1000 |> Enum.map_join(",", &"#{&1}")
+
+      table =
+        Tablex.new("""
+        R store_id || active
+        1 - || false
+        2 [#{store_ids}] || true
+        """)
+
+      assert %{active: true} = run(table, store_id: :rand.uniform(999) + 1)
+      assert %{active: false} = run(table, store_id: "foo")
+    end
   end
 
   defp run(table, args) do
