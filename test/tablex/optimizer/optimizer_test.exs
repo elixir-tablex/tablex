@@ -108,5 +108,15 @@ defmodule Tablex.OptimizerTest do
                |> Tablex.Optimizer.optimize()
                |> Tablex.Formatter.to_s()
     end
+
+    test "works for collect hit policy" do
+      table =
+        Tablex.new("""
+        C || a
+        1 || -
+        """)
+
+      assert table |> Tablex.Optimizer.optimize() == table
+    end
   end
 end
