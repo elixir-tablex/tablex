@@ -6,9 +6,11 @@ defmodule Tablex.Optimizer.RemoveEmptyRules do
 
   alias Tablex.Table
 
-  def optimize(%Table{} = table) do
-    remove_no_value_rules(table)
-  end
+  def optimize(%Table{hit_policy: hp} = table) when hp in [:merge, :reverse_merge],
+    do: remove_no_value_rules(table)
+
+  def optimize(table),
+    do: table
 
   defp remove_no_value_rules(%Table{} = table),
     do:
