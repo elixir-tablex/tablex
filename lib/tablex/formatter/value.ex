@@ -4,7 +4,7 @@ defmodule Tablex.Formatter.Value do
   @doc """
   Render a value into inspectable text.
   """
-  @spec render_value(any) :: IO.iodata()
+  @spec render_value(any) :: IO.chardata()
   def render_value(value) when is_list(value) do
     ["[", Stream.map(value, &render_value/1) |> Enum.intersperse(","), "]"]
   end
