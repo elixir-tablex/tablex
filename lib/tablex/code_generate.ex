@@ -356,6 +356,6 @@ defmodule Tablex.CodeGenerate do
   end
 
   defp i(v) do
-    inspect(v, limit: :infinity, char_lists: :as_lists)
+    inspect(v, limit: :infinity, charlists: :as_lists)
   end
 end
