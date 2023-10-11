@@ -4,7 +4,7 @@ defmodule Tablex.ParserTest do
 
   test "basic parser" do
     box = """
-    F   Day (string)    Weather (string) || Activity
+    F   day (string)    weather (string) || activity
     1   Monday,Tuesday  sunny            || walk
     """
 
@@ -24,7 +24,7 @@ defmodule Tablex.ParserTest do
   describe "Multiple rules" do
     test "work" do
       box = """
-      F   Day (string)    Weather (string) || Activity
+      F   day (string)    weather (string) || activity
       1   Monday,Tuesday  sunny            || walk
       2   Monday,Tuesday  rainy            || read
       """

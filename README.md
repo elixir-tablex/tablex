@@ -8,13 +8,13 @@ make maitaining domain rules easy.
 Let's assume we decide what to do everyday based on day of week and the weather,
 as the following table indicates:
 
-<table class="tablex horizontal"><colgroup> <col span="1" class="rule-number"> <col span="2" class="input"> <col span="1" class="output"> </colgroup> <thead><tr><th class="hit-policy hit-policy-F"></th><th class="input">Day (string)</th><th class="input">Weather (string)</th><th class="output">Activity</th></tr></thead><tbody><tr><td class="rule-number">1</td><td rowspan="2" class="input">Monday, Tuesday, Wednesday, Thursday</td><td class="input">rainy</td><td class="output">read</td></tr><tr><td class="rule-number">2</td><td class="input">-</td><td class="output">read, walk</td></tr><tr><td class="rule-number">3</td><td rowspan="2" class="input">Friday</td><td class="input">sunny</td><td class="output">soccer</td></tr><tr><td class="rule-number">4</td><td class="input">-</td><td class="output">swim</td></tr><tr><td class="rule-number">5</td><td class="input">Saturday</td><td class="input">-</td><td class="output">watch movie, games</td></tr><tr><td class="rule-number">6</td><td class="input">Sunday</td><td class="input">-</td><td class="output">null</td></tr></tbody></table>
+<table class="tablex horizontal"><colgroup> <col span="1" class="rule-number"> <col span="2" class="input"> <col span="1" class="output"> </colgroup> <thead><tr><th class="hit-policy hit-policy-F"></th><th class="input">day (string)</th><th class="input">weather (string)</th><th class="output">activity</th></tr></thead><tbody><tr><td class="rule-number">1</td><td rowspan="2" class="input">Monday, Tuesday, Wednesday, Thursday</td><td class="input">rainy</td><td class="output">read</td></tr><tr><td class="rule-number">2</td><td class="input">-</td><td class="output">read, walk</td></tr><tr><td class="rule-number">3</td><td rowspan="2" class="input">Friday</td><td class="input">sunny</td><td class="output">soccer</td></tr><tr><td class="rule-number">4</td><td class="input">-</td><td class="output">swim</td></tr><tr><td class="rule-number">5</td><td class="input">Saturday</td><td class="input">-</td><td class="output">watch movie, games</td></tr><tr><td class="rule-number">6</td><td class="input">Sunday</td><td class="input">-</td><td class="output">null</td></tr></tbody></table>
 
 We can use a similar tabular form of the code in an Elixir program:
 
 ``` elixir
 ...> plans = Tablex.new("""
-...> F   Day (string)                         Weather (string) || Activity
+...> F   day (string)                         weather (string) || activity
 ...> 1   Monday,Tuesday,Wednesday,Thursday    rainy            || read
 ...> 2   Monday,Tuesday,Wednesday,Thursday    -                || read,walk
 ...> 3   Friday                               sunny            || soccer
@@ -50,7 +50,7 @@ Vertical tables are the same as horizontal ones. It's just a matter of direction
 The following tables are the same:
 
 ```
-F "Product Category" "Competitor Pricing"     "Product Features" || "Launch Decision" Reasoning
+F product_category   competitor_pricing       product_features   || launch_decision   reasoning
 1 Electronics        "Higher than Competitor" "More Features"    || Launch            "Competitive Advantage"
 2 Electronics        "Lower than Competitor"  "Same Features"    || Launch            "Price Advantage"
 3 Fashion            "Same as Competitor"     "New Features"     || "Do Not Launch"   "Lack of Differentiation"
@@ -61,12 +61,12 @@ F "Product Category" "Competitor Pricing"     "Product Features" || "Launch Deci
 ```
 ====
 F                    || 1                        2                       3
-"Product Category"   || Electronics              Electronics             Fashion
-"Competitor Pricing" || "Higher than Competitor" "Lower than Competitor" "Same as Competitor"
-"Product Features"   || "More Features"          "Same Features"         "New Features"
+product_category     || Electronics              Electronics             Fashion
+competitor_pricing   || "Higher than Competitor" "Lower than Competitor" "Same as Competitor"
+product_features     || "More Features"          "Same Features"         "New Features"
 ====
-"Launch Decision"    || Launch                   Launch                  "Do Not Launch"
-Reasoning            || "Competitive Advantage"  "Price Advantage"       "Lack of Differentiation"
+launch_decision      || Launch                   Launch                  "Do Not Launch"
+reasoning            || "Competitive Advantage"  "Price Advantage"       "Lack of Differentiation"
 ```
 
 <table class="tablex vertical"><tbody><tr><th class="hit-policy hit-policy-F">F</th><th class="rule-number">1</th><th class="rule-number">2</th><th class="rule-number">3</th></tr></tbody><tbody><tr><th class="input">Product Category</th><td colspan="2"><span class="tbx-exp-string">Electronics</span></td><td><span class="tbx-exp-string">Fashion</span></td></tr><tr><th class="input">Competitor Pricing</th><td><span class="tbx-exp-string">Higher than Competitor</span></td><td><span class="tbx-exp-string">Lower than Competitor</span></td><td><span class="tbx-exp-string">Same as Competitor</span></td></tr><tr><th class="input">Product Features</th><td><span class="tbx-exp-string">More Features</span></td><td><span class="tbx-exp-string">Same Features</span></td><td><span class="tbx-exp-string">New Features</span></td></tr></tbody><tfoot><tr><th class="output">Launch Decision</th><td><span class="tbx-exp-string">Launch</span></td><td><span class="tbx-exp-string">Launch</span></td><td><span class="tbx-exp-string">Do Not Launch</span></td></tr><tr><th class="output">Reasoning</th><td><span class="tbx-exp-string">Competitive Advantage</span></td><td><span class="tbx-exp-string">Price Advantage</span></td><td><span class="tbx-exp-string">Lack of Differentiation</span></td></tr></tfoot></table>
@@ -154,7 +154,7 @@ Examples:
 
 ``` elixir
 iex> table = Tablex.new("""
-...> F   Age (integer)  || f (float)
+...> F   age (integer)  || f (float)
 ...> 1   > 60           || 3.0
 ...> 2   50..60         || 2.5
 ...> 3   31..49         || 2.0
@@ -177,7 +177,7 @@ iex> Tablex.decide(table, age: 1)
 
 ``` elixir
 iex> table = Tablex.new("""
-...> F   Age (integer)  "Years of Service"  || Holidays (integer)
+...> F   age (integer)  years_of_service    || holidays (integer)
 ...> 1   >=60           -                   || 3
 ...> 2   45..59         <30                 || 2
 ...> 3   -              >=30                || 22
@@ -202,7 +202,7 @@ Here's an example of `collect` hit policy:
 
 ``` elixir
 iex> table = Tablex.new("""
-...> C   OrderAmount    Membership       || Discount
+...> C   order_amount   membership       || discount
 ...> 1   >=100          false            || "Free cupcake"
 ...> 2   >=100          true             || "Free icecream"
 ...> 3   -              true             || "20% OFF"
@@ -223,7 +223,7 @@ Collect policy can work without any input:
 
 ``` elixir
 iex> table = Tablex.new("""
-...> C || Country         FeatureVersion
+...> C || country         feature_version
 ...> 1 || "New Zealand"   3
 ...> 2 || "Japan"         2
 ...> 3 || "Brazil"        2
@@ -240,7 +240,7 @@ Here's an example of `merge` hit policy:
 
 ``` elixir
 iex> table = Tablex.new("""
-...> M   Continent  Country  Province || Feature1 Feature2
+...> M   continent  country  province || feature1 feature2
 ...> 1   Asia       Thailand -        || true     true
 ...> 2   America    Canada   BC,ON    || -        true
 ...> 3   America    Canada   -        || true     false
@@ -271,7 +271,7 @@ The `reverse_merge` works the same as `merge` but the rule ordering is reversed:
 
 ``` elixir
 iex> table = Tablex.new("""
-...> R   Continent  Country  Province || Feature1 Feature2
+...> R   continent  country  province || feature1 feature2
 ...> 1   Europe     -        -        || false    true
 ...> 2   Europe     France   -        || true     -
 ...> 3   America    US       -        || false    false
@@ -301,10 +301,10 @@ It is feasible to generate Elixir code from a table with `Tablex.CodeGenerate.ge
 
 ``` elixir
 table = """
-F CreditScore EmploymentStatus Debt-to-Income-Ratio || Action
-1 700         employed         <0.43                || Approved
-2 700         unemployed       -                    || "Further Review"
-3 <=700       -                -                    || Denied
+F credit_score employment_status debt_to_income_ratio || action
+1 700          employed          <0.43                || Approved
+2 700          unemployed        -                    || "Further Review"
+3 <=700        -                 -                    || Denied
 """
 
 Tablex.CodeGenerate.generate(table)

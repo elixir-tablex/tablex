@@ -36,10 +36,10 @@ For example, the following code is not allowed:
 We can refer to arbitrary variable names as long as are provided in the binding argument of `Tablex.decide/2` or `Tablex/decide/3`. For example:
 
     iex> table = Tablex.new("""
-    ...>   M day_of_week || "Go to Library"  Volunteer  Blogging
-    ...>   1 1           || T                -          -
-    ...>   2 2           || F                T          -
-    ...>   3 -           || F                F          `week_of_month == 4`
+    ...>   M day_of_week || go_to_library volunteer blogging
+    ...>   1 1           || T             -         -
+    ...>   2 2           || F             T         -
+    ...>   3 -           || F             F         `week_of_month == 4`
     ...>   """)
     ...>
     ...> Tablex.decide(table, day_of_week: 1, week_of_month: 4)

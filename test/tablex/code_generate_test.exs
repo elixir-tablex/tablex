@@ -9,12 +9,12 @@ defmodule Tablex.CodeGenerateTest do
   test "it works" do
     table =
       Tablex.new("""
-      F GPA       StandardizedTestScores ExtracurricularActivities RecommendationLetters || AdmissionDecision
-      1 >=3.5     >1300                  >=2                       >=2                   || Accepted
-      2 <3.5      1000..1300             1..2                      1..2                  || Waitlisted
-      3 <3.0      -                      -                         -                     || Denied
-      4 -         <1000                  >=2                       >=2                   || "Further Review"
-      5 -         -                      -                         -                     || Denied
+      F gpa       standardized_test_scores extracurricular_activities recommendation_letters || admission_decision
+      1 >=3.5     >1300                    >=2                        >=2                    || Accepted
+      2 <3.5      1000..1300               1..2                       1..2                   || Waitlisted
+      3 <3.0      -                        -                          -                      || Denied
+      4 -         <1000                    >=2                        >=2                    || "Further Review"
+      5 -         -                        -                          -                      || Denied
       """)
 
     assert_eval(
@@ -43,7 +43,7 @@ defmodule Tablex.CodeGenerateTest do
   test "it works with lists" do
     table =
       Tablex.new("""
-      F Day                  || OpenHours
+      F day                  || open_hours
       1 Mon,Tue,Wed,Thu,Fri  || "10:00 - 20:00"
       2 Sat                  || "10:00 - 18:00"
       3 Sun                  || "12:00 - 18:00"
@@ -57,11 +57,11 @@ defmodule Tablex.CodeGenerateTest do
   test "it works with a complicated list" do
     table =
       Tablex.new("""
-      F OrderValue  ShippingDestination     ShippingWeight || ShippingOption
-      1 >=100,97    domestic                -              || "Free Shipping"
-      2 -           domestic,international  <=5            || "Standard Shipping"
-      3 -           international           >5,null        || "Expedited Shipping"
-      4 -           space                   -              || "Rocket Shipping"
+      F order_value  shipping_destination     shipping_weight || shipping_option
+      1 >=100,97     domestic                 -               || "Free Shipping"
+      2 -            domestic,international   <=5             || "Standard Shipping"
+      3 -            international            >5,null         || "Expedited Shipping"
+      4 -            space                    -               || "Rocket Shipping"
       """)
 
     assert_eval(
@@ -137,7 +137,7 @@ defmodule Tablex.CodeGenerateTest do
     test "works" do
       table =
         Tablex.new("""
-        M   Continent  Country  Province || Feature1 Feature2
+        M   continent  country  province || feature1 feature2
         1   Asia       Thailand -        || true     true
         2   America    Canada   BC,ON    || -        true
         3   America    Canada   -        || true     false
@@ -164,7 +164,7 @@ defmodule Tablex.CodeGenerateTest do
     test "works" do
       table =
         Tablex.new("""
-        R   Continent  Country  Province || Feature1 Feature2
+        R   continent  country  province || feature1 feature2
         1   Europe     -        -        || false    true
         2   Europe     France   -        || true     -
         3   America    US       -        || false    false
@@ -214,7 +214,7 @@ defmodule Tablex.CodeGenerateTest do
     test "works" do
       table =
         Tablex.new("""
-        M   target.country  target.province || Feature1 Feature2
+        M   target.country  target.province || feature1 feature2
         1   Canada          BC,ON           || -        true
         2   Canada          -               || true     false
         """)
@@ -266,7 +266,7 @@ defmodule Tablex.CodeGenerateTest do
     test "works" do
       table =
         Tablex.new("""
-        M   target.country  target.province || Feature1.enabled
+        M   target.country  target.province || feature1.enabled
         1   Canada          BC,ON           || -
         2   Canada          -               || true
         """)

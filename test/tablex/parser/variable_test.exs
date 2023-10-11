@@ -6,26 +6,29 @@ defmodule Tablex.Parser.VariableTest do
   doctest Variable
 
   test "it works" do
-    assert %{name: :f, label: "F"} = parse("F")
+    assert %{name: :F, label: "F"} = parse("F")
   end
 
   test "it works for multi-letter char" do
-    assert %{name: :test, label: "Test"} = parse("Test")
+    assert %{name: :Test, label: "Test"} = parse("Test")
   end
 
-  test "it underscores" do
-    assert %{name: :test_foo} = parse("TestFoo")
-    assert %{name: :test_foo} = parse("Test-Foo")
-    assert %{name: :test_foo} = parse("Test-_Foo")
+  describe "Variable name cases" do
+    test "are kept" do
+      assert %{name: :TestFoo} = parse("TestFoo")
+      assert %{name: :Test_Foo} = parse("Test-Foo")
+      assert %{name: :Test__Foo} = parse("Test-_Foo")
+      assert %{name: :Test__Foo, path: [:myBar]} = parse("myBar.Test-_Foo")
+    end
   end
 
   test "it works with string type" do
-    assert %{name: :test, type: :string} = parse("Test (string)")
+    assert %{name: :Test, type: :string} = parse("Test (string)")
   end
 
   test "it works with descriptions" do
     assert %{
-             name: :test,
+             name: :Test,
              label: "Test",
              type: :string,
              desc: "describing the test"
@@ -34,7 +37,7 @@ defmodule Tablex.Parser.VariableTest do
 
   test "it works with quoted strings" do
     assert %{
-             name: :test_var_test,
+             name: :Test__var_test,
              label: "Test  var test",
              type: :string,
              desc: "describing the test"
