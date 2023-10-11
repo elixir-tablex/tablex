@@ -8,7 +8,7 @@ defmodule Tablex.FormatterTest do
     test "works" do
       table =
         Tablex.new("""
-        F   Day (string)                         Weather (string) || Activity
+        F   day (string)                         weather (string) || activity
         1   Monday,Tuesday,Wednesday,Thursday    rainy            || read
         2   Monday,Tuesday,Wednesday,Thursday    -                || read,walk
         3   Friday                               sunny            || soccer
@@ -23,7 +23,7 @@ defmodule Tablex.FormatterTest do
     test "works with informative rows" do
       table =
         Tablex.new("""
-        F   Day                                  Weather          || Activity
+        F   day                                  weather          || activity
             (string, weekday)                    -                || -
         1   Monday,Tuesday,Wednesday,Thursday    rainy            || read
         2   Monday,Tuesday,Wednesday,Thursday    -                || read,walk
@@ -66,18 +66,18 @@ defmodule Tablex.FormatterTest do
             path: [:quest, :brand]
           },
           %Tablex.Variable{
-            name: :picking_only,
+            name: :pickingOnly,
             label: "quest.pickingAndDelivery.pickingOnly",
             desc: "Picking-only?",
             type: :bool,
-            path: [:quest, :picking_and_delivery]
+            path: [:quest, :pickingAndDelivery]
           },
           %Tablex.Variable{
-            name: :delivery_type,
+            name: :deliveryType,
             label: "quest.pickingAndDelivery.deliveryType",
             desc: "Delivery Type",
             type: :string,
-            path: [:quest, :picking_and_delivery]
+            path: [:quest, :pickingAndDelivery]
           },
           %Tablex.Variable{
             name: :type,

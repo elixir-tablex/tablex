@@ -16,7 +16,7 @@ or not specified (`-`).
 
 ``` elixir
 iex> table = Tablex.new("""
-...>   F Symptoms     "Test Results"                            "Medical History"                || Treatment Medication   Follow-up
+...>   F symptoms     test_results                              medical_history                  || treatment medication   follow_up
 ...>     (string)     (string, either NORMAL or ABNORMAL)       (string)                         || (string)  (string)     (integer, in weeks)
 ...>   1 fever,cough  NORMAL                                    "No Allergies"                   || Rest      OTC          2
 ...>   2 "Chest Pain" ABNORMAL                                  ECG,"Family Hx of Heart Disease" || Hospital  Prescription 1
@@ -39,7 +39,7 @@ In case you want to skip some field(s), `"-"` can be used, as:
 
 ``` elixir
 iex> table = Tablex.new("""
-...>   F "Customer Segment" "Purchase Frequency"  || "Campaign Type" Discount   "Email Frequency"
+...>   F customer_segment   purchase_frequency    || campaign_type   discount   email_frequency
 ...>     -                  (integer, times/year) || -               -          -
 ...>   1 Loyal              >8                    || Personalized    "20%"      Monthly
 ...>   2 Occasional         2..8                  || Seasonal        "10%"      Quarterly

@@ -42,7 +42,7 @@ defmodule Tablex.CodeExecutionTest do
     test "works with `merge` hit policy" do
       table =
         Tablex.new("""
-        M day_of_week || "Go to Library"  Volunteer  Blogging
+        M day_of_week || go_to_library volunteer  blogging
         1 1           || T                -          -
         2 2           || F                T          -
         3 -           || F                F          `week_of_month == 4`

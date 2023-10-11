@@ -98,8 +98,6 @@ defmodule Tablex.Parser.Variable do
         t
         |> String.trim()
         |> String.replace(["-", " "], "_")
-        |> Macro.underscore()
-        |> String.replace(~r/_+/, "_")
         |> String.to_atom()
       end)
       |> Enum.reverse()

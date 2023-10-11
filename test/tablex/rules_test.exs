@@ -38,8 +38,8 @@ defmodule Tablex.RulesTest do
                inputs: [
                  {[:store, :id], :any},
                  {[:quest, :brand, :id], :any},
-                 {[:quest, :picking_and_delivery, :picking_only], :any},
-                 {[:quest, :picking_and_delivery, :delivery_type], :any},
+                 {[:quest, :pickingAndDelivery, :pickingOnly], :any},
+                 {[:quest, :pickingAndDelivery, :deliveryType], :any},
                  {[:quest, :type], :any}
                ],
                outputs: [{[:enabled], false}]
@@ -49,8 +49,8 @@ defmodule Tablex.RulesTest do
                inputs: [
                  {[:store, :id], :any},
                  {[:quest, :brand, :id], 719},
-                 {[:quest, :picking_and_delivery, :picking_only], :any},
-                 {[:quest, :picking_and_delivery, :delivery_type], :any},
+                 {[:quest, :pickingAndDelivery, :pickingOnly], :any},
+                 {[:quest, :pickingAndDelivery, :deliveryType], :any},
                  {[:quest, :type], :any}
                ],
                outputs: [{[:enabled], true}]
@@ -60,8 +60,8 @@ defmodule Tablex.RulesTest do
                inputs: [
                  {[:store, :id], :any},
                  {[:quest, :brand, :id], [719, 749]},
-                 {[:quest, :picking_and_delivery, :picking_only], :any},
-                 {[:quest, :picking_and_delivery, :delivery_type], :any},
+                 {[:quest, :pickingAndDelivery, :pickingOnly], :any},
+                 {[:quest, :pickingAndDelivery, :deliveryType], :any},
                  {[:quest, :type], :any}
                ],
                outputs: [{[:enabled], true}]
