@@ -42,7 +42,7 @@ defmodule Tablex.MixProject do
         guides/code_execution.md
         ],
       before_closing_head_tag: &before_closing_head_tag/1,
-      source_url: "https://github.com/qhwa/tablex"
+      source_url: "https://github.com/elixir-tablex/tablex"
     ]
   end
 
@@ -178,7 +178,7 @@ defmodule Tablex.MixProject do
       files: ~w[lib mix.exs],
       licenses: ~w[MIT],
       links: %{
-        "Github" => "https://github.com/qhwa/tablex"
+        "Github" => "https://github.com/elixir-tablex/tablex"
       }
     ]
   end
