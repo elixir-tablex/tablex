@@ -10,7 +10,9 @@ defmodule Tablex.NestedTest do
         2 || 3    4
         """)
 
-      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c -> Tablex.Decider.Naive.decide(a, b, c) end)
+      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c ->
+        Tablex.Decider.Naive.decide(a, b, c)
+      end)
 
       assert Tablex.decide(table, []) == [
                %{a: %{b: 1, c: 2}},
@@ -33,11 +35,17 @@ defmodule Tablex.NestedTest do
         1 <10  || T
         2 -    || F
         """)
-      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c -> Tablex.Decider.Naive.decide(a, b, c) end)
+
+      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c ->
+        Tablex.Decider.Naive.decide(a, b, c)
+      end)
 
       assert %{hit: false} = Tablex.decide(table, %StructA{a: %StructB{b: 10}})
 
-      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c -> Tablex.Decider.Naive.decide(a, b, c) end)
+      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c ->
+        Tablex.Decider.Naive.decide(a, b, c)
+      end)
+
       assert %{hit: true} = Tablex.decide(table, %StructA{a: %StructB{b: 9}})
     end
   end
@@ -50,9 +58,17 @@ defmodule Tablex.NestedTest do
         1 <10  || T
         2 -    || F
         """)
-      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c -> Tablex.Decider.Naive.decide(a, b, c) end)
+
+      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c ->
+        Tablex.Decider.Naive.decide(a, b, c)
+      end)
+
       assert Tablex.decide(table, a: %{b: 10}) == %{hit: false}
-      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c -> Tablex.Decider.Naive.decide(a, b, c) end)
+
+      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c ->
+        Tablex.Decider.Naive.decide(a, b, c)
+      end)
+
       assert Tablex.decide(table, a: %{b: 9}) == %{hit: true}
     end
   end
