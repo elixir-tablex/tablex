@@ -29,9 +29,7 @@ defmodule Tablex.MixProject do
       {:formular, "~> 0.4.1"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:ucwidth, "~> 0.2"},
-      {:sanskrit, "~> 0.1.8"},
-      {:retex, "~> 0.1.9"},
-      {:decimal, "~> 2.0"},
+      {:neural_bridge, "~> 0.0.1"},
       {:mox, "~> 1.0", only: :test}
     ]
   end
