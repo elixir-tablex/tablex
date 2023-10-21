@@ -17,8 +17,9 @@ defmodule Tablex.Decider.Rete do
   @spec decide(Table.t(), keyword(), options()) :: map() | {:error, :hit_policy_not_implemented}
   def decide(table, args, opts \\ [])
 
-  def decide(%Table{hit_policy: hit_policy} = table, args, _opts) when hit_policy in [:collect, :first_hit] do
-    args = Map.new(table.inputs, fn input -> {input.name, prepare_input(args, input)} end)
+  def decide(%Table{hit_policy: hit_policy} = table, args, _opts)
+      when hit_policy in [:collect, :first_hit] do
+    args = prepare_inputs(table, args)
     rules_with_meta = encode_rules(table.rules, table.inputs, table.outputs)
     rules = Enum.map(rules_with_meta, fn {_, _, rule} -> rule end)
     facts = Enum.map(args, &arg_to_fact/1)
@@ -36,6 +37,10 @@ defmodule Tablex.Decider.Rete do
 
   def decide({:error, _} = err, _, _) do
     err
+  end
+
+  defp prepare_inputs(table, args) do
+    Map.new(table.inputs, fn input -> {input.name, prepare_input(args, input)} end)
   end
 
   defp prepare_input(args, input, default \\ nil) do
@@ -118,7 +123,6 @@ defmodule Tablex.Decider.Rete do
   defp parse_rule_check(_attribute, value) when is_binary(value) or is_number(value) do
     "is equal #{inspect(value)}"
   end
-
 
   defp parse_rule_check(_attribute, {:>, value}) do
     "is greater #{value}"

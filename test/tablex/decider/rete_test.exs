@@ -70,5 +70,24 @@ defmodule Tablex.Decider.ReteTest do
       assert Rete.decide(table, order_amount: 80) ==
                []
     end
+
+
+    @tag :skip # not yet implemented
+    test "collect policy can work without any input" do
+      table =
+        Tablex.new("""
+        C || country         feature_version
+        1 || "New Zealand"   3
+        2 || "Japan"         2
+        3 || "Brazil"        2
+        """)
+        |> IO.inspect()
+
+      assert Rete.decide(table, []) == [
+               %{country: "New Zealand", feature_version: 3},
+               %{country: "Japan", feature_version: 2},
+               %{country: "Brazil", feature_version: 2}
+             ]
+    end
   end
 end
