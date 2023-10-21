@@ -16,7 +16,7 @@ defmodule Tablex.Decider.Rete do
   @spec decide(Table.t(), keyword(), options()) :: map() | {:error, :hit_policy_not_implemented}
   def decide(table, args, opts \\ [])
 
-  def decide(%Table{hit_policy: :first_hit} = table, args, _opts) do
+  def decide(%Table{hit_policy: hit_policy} = table, args, _opts) do
     rules = encode_rules(table.rules, table.inputs, table.outputs)
     facts = Enum.map(args, &arg_to_fact/1)
 
@@ -24,8 +24,7 @@ defmodule Tablex.Decider.Rete do
     |> NeuralBridge.Session.add_rules(rules)
     |> NeuralBridge.Session.add_facts(facts)
     |> Map.fetch!(:inferred_facts)
-    |> Enum.reverse()
-    |> Map.new(fn wme -> {wme.identifier, wme.value} end)
+    |> collect_results(hit_policy)
   end
 
   def decide(%Table{}, _, _) do
@@ -36,25 +35,42 @@ defmodule Tablex.Decider.Rete do
     err
   end
 
+  defp collect_results(facts, hit_policy) do
+    case hit_policy do
+      :first_hit ->
+        facts |> Enum.reverse() |> Map.new(fn wme -> {wme.identifier, wme.value} end)
+
+      :merge ->
+        facts |> Map.new(fn wme -> {wme.identifier, wme.value} end)
+
+      :reverse_merge ->
+        facts |> Enum.reverse() |> Map.new(fn wme -> {wme.identifier, wme.value} end)
+
+      :collect ->
+        Enum.map(facts, fn wme -> {wme.identifier, wme.value} end)
+    end
+  end
+
   defp encode_rules(rules, inputs, outputs) do
     Enum.map(rules, fn rule ->
       [rule_id, {:input, given}, {:output, then}] = rule
 
-      given = Enum.with_index(given, fn row, index ->
-        attribute = Enum.at(inputs, index).name
-        "#{attribute}'s #{attribute}_value #{parse_rule_check(attribute, row)}"
-      end)
-      |> Enum.join(" \n ")
-
-
-      then = Enum.map(outputs, fn output ->
-        Enum.flat_map(then, fn clause ->
-          Enum.map(List.wrap(clause), fn clause ->
-             "#{output.name}'s value #{parse_rule_then(clause)}"
-            end)
+      given =
+        Enum.with_index(given, fn row, index ->
+          attribute = Enum.at(inputs, index).name
+          "#{attribute}'s #{attribute}_value #{parse_rule_check(attribute, row)}"
         end)
-      end)
-      |> Enum.join(" \n ")
+        |> Enum.join(" \n ")
+
+      then =
+        Enum.map(outputs, fn output ->
+          Enum.flat_map(then, fn clause ->
+            Enum.map(List.wrap(clause), fn clause ->
+              "#{output.name}'s value #{parse_rule_then(clause)}"
+            end)
+          end)
+        end)
+        |> Enum.join(" \n ")
 
       NeuralBridge.Rule.new(id: rule_id, given: given, then: then)
     end)
@@ -72,7 +88,7 @@ defmodule Tablex.Decider.Rete do
     "is #{inspect(string)}"
   end
 
-  defp parse_rule_then( nil) do
+  defp parse_rule_then(nil) do
     "is #{inspect(nil)}"
   end
 
