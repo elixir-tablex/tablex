@@ -5,9 +5,10 @@ defmodule Tablex.Decider.Retex do
   """
 
   alias Tablex.Table
-  import Tablex.Rules, only: [match_expect?: 2]
 
   @type options :: []
+
+  @behaviour Tablex.DeciderBehaviour
 
   @doc """
   Run the decision process on the given table, arguments, and options.
