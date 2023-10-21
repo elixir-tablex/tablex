@@ -5,7 +5,6 @@ defmodule Tablex.Decider.Rete do
   """
 
   alias Tablex.Table
-  import Retex.Facts
 
   @type options :: []
 
@@ -17,7 +16,7 @@ defmodule Tablex.Decider.Rete do
   @spec decide(Table.t(), keyword(), options()) :: map() | {:error, :hit_policy_not_implemented}
   def decide(table, args, opts \\ [])
 
-  def decide(%Table{hit_policy: :first_hit} = table, args, opts) do
+  def decide(%Table{hit_policy: :first_hit} = table, args, _opts) do
     rules = encode_rules(table.rules, table.inputs, table.outputs)
     facts = Enum.map(args, &arg_to_fact/1)
 
@@ -43,7 +42,7 @@ defmodule Tablex.Decider.Rete do
 
       given = Enum.with_index(given, fn row, index ->
         attribute = Enum.at(inputs, index).name
-        statement = "#{attribute}'s #{attribute}_value #{parse_rule_check(attribute, row)}"
+        "#{attribute}'s #{attribute}_value #{parse_rule_check(attribute, row)}"
       end)
       |> Enum.join(" \n ")
 
@@ -51,7 +50,7 @@ defmodule Tablex.Decider.Rete do
       then = Enum.map(outputs, fn output ->
         Enum.flat_map(then, fn clause ->
           Enum.map(List.wrap(clause), fn clause ->
-             statement = "#{output.name}'s value #{parse_rule_then(clause)}"
+             "#{output.name}'s value #{parse_rule_then(clause)}"
             end)
         end)
       end)
@@ -77,10 +76,11 @@ defmodule Tablex.Decider.Rete do
     "is #{inspect(nil)}"
   end
 
-  defp parse_rule_check(attribute, list) when is_list(list) do
+  defp parse_rule_check(_attribute, list) when is_list(list) do
     "in #{inspect(list)}"
   end
-  defp parse_rule_check(attribute, string) when is_binary(string) do
+
+  defp parse_rule_check(_attribute, string) when is_binary(string) do
     "is equal #{inspect(string)}"
   end
 
