@@ -1,12 +1,12 @@
-defmodule Tablex.DeciderTest do
-  alias Tablex.Decider
+defmodule Tablex.Decider.NaiveTest do
+  alias Tablex.Decider.Naive
 
   use ExUnit.Case
-  doctest Decider
+  doctest Naive
 
   describe "match_rule?/2" do
     test "works" do
-      assert Decider.match_rule?(
+      assert Naive.match_rule?(
                %{
                  [:car_size] => "mid_size",
                  [:miles_driven] => {:<=, 100},

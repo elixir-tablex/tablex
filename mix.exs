@@ -5,7 +5,7 @@ defmodule Tablex.MixProject do
     [
       app: :tablex,
       version: "0.3.1",
-      elixir: "~> 1.11",
+      elixir: "~> 1.15.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),

@@ -1,4 +1,4 @@
-defmodule Tablex.Decider do
+defmodule Tablex.Decider.Retex do
   @moduledoc """
   Decision engine module responsible for applying a set of rules to input data
   and returning the output according to the hit policy.
