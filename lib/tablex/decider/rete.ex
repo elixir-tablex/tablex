@@ -5,6 +5,7 @@ defmodule Tablex.Decider.Rete do
   """
 
   alias Tablex.Table
+  alias Tablex.NeuralBridge.Session
 
   @type options :: []
 
@@ -17,12 +18,15 @@ defmodule Tablex.Decider.Rete do
   def decide(table, args, opts \\ [])
 
   def decide(%Table{hit_policy: hit_policy} = table, args, _opts) do
-    rules = encode_rules(table.rules, table.inputs, table.outputs)
+    args = Map.new(table.inputs, fn input -> {input.name, args[input.name] || nil} end)
+    rules_with_meta = encode_rules(table.rules, table.inputs, table.outputs)
+    rules = Enum.map(rules_with_meta, fn {_, _, rule} -> rule end)
+
     facts = Enum.map(args, &arg_to_fact/1)
 
-    NeuralBridge.Session.new(inspect(table))
-    |> NeuralBridge.Session.add_rules(rules)
-    |> NeuralBridge.Session.add_facts(facts)
+    Session.new(inspect(table), hit_policy)
+    |> Session.add_rules(rules)
+    |> Session.add_facts(facts)
     |> Map.fetch!(:inferred_facts)
     |> collect_results(hit_policy)
   end
@@ -36,18 +40,20 @@ defmodule Tablex.Decider.Rete do
   end
 
   defp collect_results(facts, hit_policy) do
+    facts = Enum.sort_by(facts, fn r -> r.timestamp end, DateTime) |> Enum.reverse()
+
     case hit_policy do
       :first_hit ->
-        facts |> Enum.reverse() |> Map.new(fn wme -> {wme.identifier, wme.value} end)
+        facts |>  Map.new(fn wme -> {String.to_existing_atom(wme.identifier), wme.value} end)
 
       :merge ->
-        facts |> Map.new(fn wme -> {wme.identifier, wme.value} end)
+        facts |> Enum.reverse() |>  Map.new(fn wme -> {String.to_existing_atom(wme.identifier), wme.value} end)
 
       :reverse_merge ->
-        facts |> Enum.reverse() |> Map.new(fn wme -> {wme.identifier, wme.value} end)
+        facts |> Map.new(fn wme -> {String.to_existing_atom(wme.identifier), wme.value} end)
 
       :collect ->
-        Enum.map(facts, fn wme -> {wme.identifier, wme.value} end)
+        Enum.map(facts, fn wme -> Map.new() |> Map.put(String.to_existing_atom(wme.identifier), wme.value) end)
     end
   end
 
@@ -72,7 +78,9 @@ defmodule Tablex.Decider.Rete do
         end)
         |> Enum.join(" \n ")
 
-      NeuralBridge.Rule.new(id: rule_id, given: given, then: then)
+      rule = NeuralBridge.Rule.new(id: rule_id, given: given, then: then)
+
+      {rule.id, rule_id, rule}
     end)
   end
 
@@ -96,7 +104,7 @@ defmodule Tablex.Decider.Rete do
     "in #{inspect(list)}"
   end
 
-  defp parse_rule_check(_, %{__struct__: Range, first: first, last: last} = range) do
+  defp parse_rule_check(_, %{__struct__: Range} = range) do
     "in [#{Enum.map(range, fn n -> n end) |> Enum.join(",")}]"
   end
 
@@ -106,6 +114,18 @@ defmodule Tablex.Decider.Rete do
 
   defp parse_rule_check(_attribute, {:>, value}) do
     "is greater #{value}"
+  end
+
+  defp parse_rule_check(_attribute, {:<, value}) do
+    "< #{value}"
+  end
+
+  defp parse_rule_check(_attribute, {:>=, value}) do
+    ">= #{value}"
+  end
+
+  defp parse_rule_check(_attribute, {:=, value}) do
+    "is equal #{value}"
   end
 
   defp parse_rule_check(attribute, :any) do

@@ -30,6 +30,7 @@ defmodule Tablex.MixProject do
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
       {:ucwidth, "~> 0.2"},
       {:neural_bridge, "~> 0.0.1"},
+      {:sanskrit, path: "/Users/lorenzo/oss/sanskrit", override: true},
       {:mox, "~> 1.0", only: :test}
     ]
   end
