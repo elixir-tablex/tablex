@@ -84,8 +84,8 @@ defmodule Tablex.Decider.Rete do
     "is #{inspect(list)}"
   end
 
-  defp parse_rule_then(string) when is_binary(string) do
-    "is #{inspect(string)}"
+  defp parse_rule_then(value) when is_binary(value) or is_number(value) do
+    "is #{inspect(value)}"
   end
 
   defp parse_rule_then(nil) do
@@ -96,8 +96,16 @@ defmodule Tablex.Decider.Rete do
     "in #{inspect(list)}"
   end
 
-  defp parse_rule_check(_attribute, string) when is_binary(string) do
-    "is equal #{inspect(string)}"
+  defp parse_rule_check(_, %{__struct__: Range, first: first, last: last} = range) do
+    "in [#{Enum.map(range, fn n -> n end) |> Enum.join(",")}]"
+  end
+
+  defp parse_rule_check(_attribute, value) when is_binary(value) or is_number(value) do
+    "is equal #{inspect(value)}"
+  end
+
+  defp parse_rule_check(_attribute, {:>, value}) do
+    "is greater #{value}"
   end
 
   defp parse_rule_check(attribute, :any) do
