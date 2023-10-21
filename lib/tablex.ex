@@ -4,7 +4,7 @@ defmodule Tablex do
   """
 
   def decide(table, args, opts \\ []) do
-    Tablex.Decider.Naive.decide(table, args, opts)
+    Tablex.Decider.decide(table, args, opts)
   end
 
   @doc """

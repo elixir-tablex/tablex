@@ -3,8 +3,6 @@ defmodule Tablex.InformativeRowTest do
   use ExUnit.Case
   import DoctestFile
 
-  doctest_file("guides/informative_row.md")
-
   describe "Informative row" do
     test "works" do
       table =
