@@ -37,7 +37,7 @@ defmodule Tablex.Decider.ReteTest do
     end
 
     test "holidays calculation" do
-       table =
+      table =
         Tablex.new("""
         F   age (integer)  years_of_service    || holidays (integer)
         1   >=60           -                   || 3
@@ -50,6 +50,25 @@ defmodule Tablex.Decider.ReteTest do
       assert %{holidays: 10} == Rete.decide(table, age: 46, years_of_service: 30)
       assert %{holidays: 5} == Rete.decide(table, age: 17, years_of_service: 5)
       assert %{holidays: 10} == Rete.decide(table, age: 22)
+    end
+
+    test "with the collect strategy" do
+      table =
+        Tablex.new("""
+        C   order_amount   membership       || discount
+        1   >=100          false            || "Free cupcake"
+        2   >=100          true             || "Free icecream"
+        3   -              true             || "20% OFF"
+        """)
+
+      assert Rete.decide(table, order_amount: 500, membership: false) ==
+               [%{discount: "Free cupcake"}]
+
+      assert Rete.decide(table, order_amount: 500, membership: true) ==
+               [%{discount: "Free icecream"}, %{discount: "20% OFF"}]
+
+      assert Rete.decide(table, order_amount: 80) ==
+               []
     end
   end
 end

@@ -17,11 +17,10 @@ defmodule Tablex.Decider.Rete do
   @spec decide(Table.t(), keyword(), options()) :: map() | {:error, :hit_policy_not_implemented}
   def decide(table, args, opts \\ [])
 
-  def decide(%Table{hit_policy: hit_policy} = table, args, _opts) do
-    args = Map.new(table.inputs, fn input -> {input.name, args[input.name] || nil} end)
+  def decide(%Table{hit_policy: hit_policy} = table, args, _opts) when hit_policy in [:collect, :first_hit] do
+    args = Map.new(table.inputs, fn input -> {input.name, prepare_input(args, input)} end)
     rules_with_meta = encode_rules(table.rules, table.inputs, table.outputs)
     rules = Enum.map(rules_with_meta, fn {_, _, rule} -> rule end)
-
     facts = Enum.map(args, &arg_to_fact/1)
 
     Session.new(inspect(table), hit_policy)
@@ -39,21 +38,29 @@ defmodule Tablex.Decider.Rete do
     err
   end
 
+  defp prepare_input(args, input, default \\ nil) do
+    if Map.has_key?(Enum.into(args, %{}), input.name), do: args[input.name], else: default
+  end
+
   defp collect_results(facts, hit_policy) do
     facts = Enum.sort_by(facts, fn r -> r.timestamp end, DateTime) |> Enum.reverse()
 
     case hit_policy do
       :first_hit ->
-        facts |>  Map.new(fn wme -> {String.to_existing_atom(wme.identifier), wme.value} end)
+        facts |> Map.new(fn wme -> {String.to_existing_atom(wme.identifier), wme.value} end)
 
       :merge ->
-        facts |> Enum.reverse() |>  Map.new(fn wme -> {String.to_existing_atom(wme.identifier), wme.value} end)
+        facts
+        |> Enum.reverse()
+        |> Map.new(fn wme -> {String.to_existing_atom(wme.identifier), wme.value} end)
 
       :reverse_merge ->
         facts |> Map.new(fn wme -> {String.to_existing_atom(wme.identifier), wme.value} end)
 
       :collect ->
-        Enum.map(facts, fn wme -> Map.new() |> Map.put(String.to_existing_atom(wme.identifier), wme.value) end)
+        Enum.map(facts, fn wme ->
+          Map.new() |> Map.put(String.to_existing_atom(wme.identifier), wme.value)
+        end)
     end
   end
 
@@ -112,6 +119,7 @@ defmodule Tablex.Decider.Rete do
     "is equal #{inspect(value)}"
   end
 
+
   defp parse_rule_check(_attribute, {:>, value}) do
     "is greater #{value}"
   end
@@ -130,5 +138,13 @@ defmodule Tablex.Decider.Rete do
 
   defp parse_rule_check(attribute, :any) do
     "is equal $#{attribute}"
+  end
+
+  defp parse_rule_check(_attribute, true) do
+    "is equal #{inspect(true)}"
+  end
+
+  defp parse_rule_check(_attribute, false) do
+    "is equal #{inspect(false)}"
   end
 end

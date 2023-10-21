@@ -28,10 +28,10 @@ defmodule Tablex.NeuralBridge.Session do
 
   @type t :: %__MODULE__{rule_engine: any(), id: String.t(), rules_fired: list(rule)}
   @type rule :: %{id: String.t(), given: Retex.Facts.t(), then: list(Retex.Facts.t() | any())}
-  @type hit_policy :: :first_hit
+  @type hit_policy :: :first_hit | :collect
 
   @spec new(String.t(), hit_policy()) :: t()
-  def new(id, :first_hit), do: %Session{hit_policy: :first_hit, id: id, rule_engine: Retex.new()}
+  def new(id, hit_policy), do: %Session{hit_policy: hit_policy, id: id, rule_engine: Retex.new()}
 
   @doc "Merge the pre-existing rules with the new set of rules provided"
   @spec add_rules(t(), list(rule)) :: t()
@@ -90,7 +90,8 @@ defmodule Tablex.NeuralBridge.Session do
     if Enum.any?(rules), do: apply_rules(updated_session), else: updated_session
   end
 
-  defp extract_applicable_rules(_session, %_{agenda: agenda}, rules_fired), do: agenda -- rules_fired
+  defp extract_applicable_rules(_session, %_{agenda: agenda}, rules_fired),
+    do: agenda -- rules_fired
 
   defp apply_rule(
          session = %__MODULE__{rules_fired: rules_fired},
@@ -147,7 +148,7 @@ defmodule Tablex.NeuralBridge.Session do
         {key, val}
       end
 
-    wme = Map.put(struct(Retex.Wme, populated), :timestamp, DateTime.utc_now)
+    wme = Map.put(struct(Retex.Wme, populated), :timestamp, DateTime.utc_now())
     rule_engine = Retex.add_wme(rule_engine, wme)
 
     {%{
@@ -163,7 +164,12 @@ defmodule Tablex.NeuralBridge.Session do
          _rule
        ) do
     %{rule_engine: rule_engine} = session
-    rule_engine = Retex.add_wme(rule_engine, Map.put(Retex.Wme.new(ident, attr, value), :timestamp, DateTime.utc_now))
+
+    rule_engine =
+      Retex.add_wme(
+        rule_engine,
+        Map.put(Retex.Wme.new(ident, attr, value), :timestamp, DateTime.utc_now())
+      )
 
     {%{session | rule_engine: rule_engine}, bindings}
   end
