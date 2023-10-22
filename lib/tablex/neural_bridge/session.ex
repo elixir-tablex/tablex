@@ -90,8 +90,9 @@ defmodule Tablex.NeuralBridge.Session do
     if Enum.any?(rules), do: apply_rules(updated_session), else: updated_session
   end
 
-  defp extract_applicable_rules(_session, %_{agenda: agenda}, rules_fired),
-    do: agenda -- rules_fired
+  defp extract_applicable_rules(%{hit_policy: :first_hit}, %_{agenda: agenda}, rules_fired) do
+    if Enum.any?(rules_fired), do: [], else: agenda -- rules_fired
+  end
 
   defp apply_rule(
          session = %__MODULE__{rules_fired: rules_fired},
