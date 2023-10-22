@@ -20,15 +20,34 @@ defmodule Tablex.Decider.Rete do
   def decide(%Table{hit_policy: hit_policy} = table, args, _opts)
       when hit_policy in [:collect, :first_hit] do
     args = prepare_inputs(table, args)
-    rules_with_meta = encode_rules(table.rules, table.inputs, table.outputs)
-    rules = Enum.map(rules_with_meta, fn {_, _, rule} -> rule end)
-    facts = Enum.map(args, &arg_to_fact/1)
 
-    Session.new(inspect(table), hit_policy)
-    |> Session.add_rules(rules)
-    |> Session.add_facts(facts)
+    table
+    |> session(hit_policy)
+    |> Session.add_facts(Enum.map(args, &arg_to_fact/1))
     |> Map.fetch!(:inferred_facts)
     |> collect_results(hit_policy)
+  end
+
+  defp session(table, hit_policy) do
+    hash = :crypto.hash(:sha256, inspect(table))
+
+    if existing = :persistent_term.get(hash, nil) do
+      existing
+    else
+      rules_with_meta = encode_rules(table.rules, table.inputs, table.outputs)
+      rules = Enum.map(rules_with_meta, fn {_, _, rule} -> rule end)
+
+      session =
+        hash
+        |> Session.new(hit_policy)
+        |> Session.add_rules(rules)
+
+      key = :crypto.hash(:sha256, inspect(table))
+
+      :persistent_term.put(key, session)
+
+      session
+    end
   end
 
   def decide(%Table{}, _, _) do

@@ -34,7 +34,8 @@ defmodule Tablex.MixProject do
        github: "lorenzosinisi/sanskrit",
        ref: "cf2a0ccd98e6027ee73898c7646af34b6a27ac0b",
        override: true},
-      {:mox, "~> 1.0", only: :test}
+      {:mox, "~> 1.0", only: :test},
+      {:benchee, "~> 1.0", only: :dev}
     ]
   end
 
