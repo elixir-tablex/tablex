@@ -3,8 +3,9 @@ defmodule Tablex do
   Tablex implements Decision Table. Its goal is to make domain rules easy to maintain.
   """
 
-  defdelegate decide(table, args), to: Tablex.Decider
-  defdelegate decide(table, args, opts), to: Tablex.Decider
+  def decide(table, args, opts \\ []) do
+    Tablex.Decider.decide(table, args, opts)
+  end
 
   @doc """
   Create a new table.

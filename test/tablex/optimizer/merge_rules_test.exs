@@ -185,7 +185,16 @@ defmodule MergeRules.MergeRulesTest do
         4 -     -  || 2
         """)
 
+      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c ->
+        Tablex.Decider.Naive.decide(a, b, c)
+      end)
+
       assert %{x: 3} == Tablex.decide(table, foo: true)
+
+      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c ->
+        Tablex.Decider.Naive.decide(a, b, c)
+      end)
+
       assert %{x: 3} == table |> MergeRules.optimize() |> Tablex.decide(foo: true)
 
       assert %{

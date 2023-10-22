@@ -5,7 +5,7 @@ defmodule Tablex.MixProject do
     [
       app: :tablex,
       version: "0.3.1",
-      elixir: "~> 1.11",
+      elixir: "~> 1.15.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -28,7 +28,14 @@ defmodule Tablex.MixProject do
       {:nimble_parsec, "~> 1.3"},
       {:formular, "~> 0.4.1"},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:ucwidth, "~> 0.2"}
+      {:ucwidth, "~> 0.2"},
+      {:neural_bridge, "~> 0.0.1"},
+      {:sanskrit,
+       github: "lorenzosinisi/sanskrit",
+       ref: "cf2a0ccd98e6027ee73898c7646af34b6a27ac0b",
+       override: true},
+      {:mox, "~> 1.0", only: :test},
+      {:benchee, "~> 1.0", only: :dev}
     ]
   end
 

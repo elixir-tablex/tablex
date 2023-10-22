@@ -37,7 +37,15 @@ defmodule Tablex.OptimizerTest do
         feature4: %{enabled: true, km: 0.3}
       }
 
+      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c ->
+        Tablex.Decider.Naive.decide(a, b, c)
+      end)
+
       assert expected_output == Tablex.decide(table, target: %{store_id: 2053})
+
+      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c ->
+        Tablex.Decider.Naive.decide(a, b, c)
+      end)
 
       assert expected_output ==
                table
@@ -84,7 +92,15 @@ defmodule Tablex.OptimizerTest do
         feature4: %{enabled: true, km: 0.3}
       }
 
+      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c ->
+        Tablex.Decider.Naive.decide(a, b, c)
+      end)
+
       assert expected_output == Tablex.decide(table, target: %{store_id: 2053})
+
+      Mox.expect(DeciderBehaviourMock, :decide, fn a, b, c ->
+        Tablex.Decider.Naive.decide(a, b, c)
+      end)
 
       assert expected_output ==
                table

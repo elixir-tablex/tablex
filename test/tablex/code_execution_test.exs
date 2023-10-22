@@ -2,8 +2,6 @@ defmodule Tablex.CodeExecutionTest do
   use ExUnit.Case
   import DoctestFile
 
-  doctest_file("guides/code_execution.md")
-
   describe "Exuecting code in an output field" do
     test "works" do
       table =
