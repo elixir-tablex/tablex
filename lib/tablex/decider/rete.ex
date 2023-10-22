@@ -28,6 +28,14 @@ defmodule Tablex.Decider.Rete do
     |> collect_results(hit_policy)
   end
 
+  def decide(%Table{}, _, _) do
+    {:error, {__MODULE__, :hit_policy_not_implemented}}
+  end
+
+  def decide({:error, _} = err, _, _) do
+    err
+  end
+
   defp session(table, hit_policy) do
     hash = :crypto.hash(:sha256, inspect(table))
 
@@ -48,14 +56,6 @@ defmodule Tablex.Decider.Rete do
 
       session
     end
-  end
-
-  def decide(%Table{}, _, _) do
-    {:error, {__MODULE__, :hit_policy_not_implemented}}
-  end
-
-  def decide({:error, _} = err, _, _) do
-    err
   end
 
   defp prepare_inputs(table, args) do
