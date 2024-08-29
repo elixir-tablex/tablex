@@ -1,0 +1,133 @@
+# Tablex
+
+```elixir
+Mix.install([
+  {:tablex, "~> 0.3"}
+])
+```
+
+## Tablex Formatted Decision Tables
+
+Tablex is first a format for presenting decision tables. It's designed to balance human readability and parser-friendlity.
+
+Here's an example table to present a decision to make for a proxy relay:
+
+```
+F current_node  destination_domain  || next_relay
+1 CA1           www.example.com     || US1
+2 -             -                   || -
+```
+
+We can create such a table in Elixir with Tablex library:
+
+```elixir
+routing_table =
+  Tablex.new("""
+  F current_node  destination_domain  || next_relay
+  1 CA1           www.example.com     || US1
+  2 -             -                   || -
+  """)
+```
+
+## Making a decision
+
+This first thing we can do is to make a decision accordingly.
+
+If nothing is present in the input:
+
+```elixir
+Tablex.decide(
+  routing_table,
+  []
+)
+```
+
+If the current node is "CA1" and destination is "www.example.com":
+
+```elixir
+Tablex.decide(
+  routing_table,
+  current_node: "CA1",
+  destination_domain: "www.example.com"
+)
+```
+
+Otherwise, it returns the last `any` rule instead:
+
+```elixir
+Tablex.decide(
+  routing_table,
+  current_node: "HK5",
+  destination_domain: "www.example.com"
+)
+```
+
+## Manipulating a Decision Table Programmably
+
+Extracting rules based on a context:
+
+```elixir
+Tablex.Rules.get_rules(routing_table, [])
+```
+
+```elixir
+Tablex.Rules.get_rules(routing_table, current_node: "CA1", destination_domain: "www.example.com")
+```
+
+Inserting new rules:
+
+```elixir
+routing_table =
+  routing_table
+  |> Tablex.Rules.update_rule_by_input(
+    %{current_node: "CA1", destination_domain: "*.mx"},
+    %{next_relay: "MX1"}
+  )
+  |> Tablex.Optimizer.optimize()
+
+routing_table |> Tablex.Formatter.to_s() |> IO.puts()
+```
+
+There's no API to delete rules, but it can be accomplished by updating, since optimzer can remove unnecessary rules:
+
+```elixir
+routing_table =
+  Tablex.Rules.update_rule_by_input(
+    routing_table,
+    %{current_node: "CA1", destination_domain: "*.mx"},
+    %{next_relay: :any}
+  )
+  # Optimizer will merge duplicated rules
+  |> Tablex.Optimizer.optimize()
+
+routing_table |> Tablex.Formatter.to_s() |> IO.puts()
+```
+
+## Just for fun
+
+```elixir
+defmodule FibWithTablex do
+  @table Tablex.new("""
+         F x || fib
+         1 1 || 1
+         2 >1 || `x * f(x - 1)`
+         """)
+
+  def fib(x) do
+    Tablex.decide(@table,
+      x: x,
+      f: fn x ->
+        fib(x) |> Map.fetch!(:fib)
+      end
+    )
+  end
+end
+```
+
+```elixir
+FibWithTablex.fib(1)
+```
+
+```elixir
+FibWithTablex.fib(10)
+```

@@ -1,0 +1,26 @@
+# Tablex + Formular Server
+
+```elixir
+Mix.install([
+  {:tablex, "~> 0.3"},
+  {:formular_client, "~> 0.4"}
+])
+```
+
+## Section
+
+```elixir
+Supervisor.start_link(Formular.Client.Supervisor,
+  client_name: "demo: tablex + formular",
+  url: "wss://formular-server-ose.fly.dev/socket/websocket",
+  formulas: [
+    {GiraRouteFM, "gira_route_table"}
+  ]
+)
+```
+
+```elixir
+GiraRouteFM.run(current_node: "HK1", dst: "example.com")
+```
+
+Now change the table on server, and re-run the above code.
