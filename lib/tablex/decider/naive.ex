@@ -1,4 +1,4 @@
-defmodule Tablex.Decider do
+defmodule Tablex.Decider.Naive do
   @moduledoc """
   Decision engine module responsible for applying a set of rules to input data
   and returning the output according to the hit policy.
@@ -7,11 +7,14 @@ defmodule Tablex.Decider do
   alias Tablex.Table
   import Tablex.Rules, only: [match_expect?: 2]
 
+  @behaviour Tablex.DeciderBehaviour
+
   @type options :: []
 
   @doc """
   Run the decision process on the given table, arguments, and options.
   """
+  @impl Tablex.DeciderBehaviour
   @spec decide(Table.t(), keyword(), options()) :: map() | {:error, :hit_policy_not_implemented}
   def decide(table, args, opts \\ [])
 
